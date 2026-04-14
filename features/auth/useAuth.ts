@@ -12,7 +12,13 @@ import {
 import { connectSocket, disconnectSocket } from "@/lib/socket";
 import { clearSession, setSession } from "@/store/slices/authSlice";
 import { useAppDispatch, useAppSelector } from "@/store/hooks";
-import type { AuthResponse, LoginPayload, SignupPayload } from "@/types/auth";
+import type {
+  AuthResponse,
+  LoginPayload,
+  OAuthCallbackPayload,
+  OAuthProvider,
+  SignupPayload,
+} from "@/types/auth";
 
 const handleSuccessSession = (
   dispatch: ReturnType<typeof useAppDispatch>,
@@ -58,6 +64,19 @@ export const useAuth = () => {
     onSuccess: onAuthSuccess,
   });
 
+  const authenticateWithOAuth = useCallback(
+    async (provider: OAuthProvider, payload: OAuthCallbackPayload) => {
+      const result =
+        provider === "google"
+          ? await authService.oauthGoogle(payload)
+          : await authService.oauthMicrosoft(payload);
+
+      onAuthSuccess(result);
+      return result;
+    },
+    [onAuthSuccess],
+  );
+
   const logoutMutation = useMutation({
     mutationFn: async () => {
       const refreshToken =
@@ -83,6 +102,7 @@ export const useAuth = () => {
   return {
     loginMutation,
     signupMutation,
+    authenticateWithOAuth,
     logout: logoutMutation.mutateAsync,
     isLoggingOut: logoutMutation.isPending,
     isAuthenticated: Boolean(authState.accessToken && authState.user),

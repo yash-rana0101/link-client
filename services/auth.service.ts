@@ -3,6 +3,7 @@ import type {
   AuthResponse,
   AuthUser,
   LoginPayload,
+  OAuthCallbackPayload,
   SignupPayload,
 } from "@/types/auth";
 
@@ -14,6 +15,16 @@ export const authService = {
 
   signup: async (payload: SignupPayload): Promise<AuthResponse> => {
     const response = await api.post<unknown>("/auth/signup", payload);
+    return unwrapData<AuthResponse>(response);
+  },
+
+  oauthGoogle: async (payload: OAuthCallbackPayload): Promise<AuthResponse> => {
+    const response = await api.post<unknown>("/auth/oauth/google", payload);
+    return unwrapData<AuthResponse>(response);
+  },
+
+  oauthMicrosoft: async (payload: OAuthCallbackPayload): Promise<AuthResponse> => {
+    const response = await api.post<unknown>("/auth/oauth/microsoft", payload);
     return unwrapData<AuthResponse>(response);
   },
 

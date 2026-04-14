@@ -30,6 +30,14 @@ export interface SignupPayload {
   name?: string;
 }
 
+export type OAuthProvider = "google" | "microsoft";
+
+export interface OAuthCallbackPayload {
+  code: string;
+  redirectUri?: string;
+  codeVerifier?: string;
+}
+
 export interface AuthSession {
   accessToken: string | null;
   refreshToken: string | null;
