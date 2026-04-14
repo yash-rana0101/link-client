@@ -164,7 +164,7 @@ export const AuthForm = ({ mode }: AuthFormProps) => {
     <section className="relative h-full max-h-full w-full max-w-5xl overflow-hidden rounded-[1.75rem] border border-surface-300/70 bg-white/90 shadow-[0_24px_80px_rgba(23,34,27,0.16)] backdrop-blur-xl">
       <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_12%_12%,rgba(84,191,117,0.12),transparent_38%),radial-gradient(circle_at_86%_88%,rgba(23,34,27,0.1),transparent_34%)]" />
       <div className="relative grid h-full lg:grid-cols-[1.04fr_1fr]">
-        <aside className="hidden min-h-full flex-col border-r border-white/10 bg-gradient-to-br from-surface-900 via-surface-800 to-trust-900 px-8 py-8 text-white lg:flex">
+        <aside className="hidden min-h-full flex-col border-r border-white/10 bg-linear-to-b from-surface-900 via-surface-800 to-trust-900 px-8 py-8 text-white lg:flex">
           <div className="inline-flex h-12 w-12 items-center justify-center rounded-xl border border-white/30 bg-white/10 text-white shadow-sm">
             <svg
               viewBox="0 0 24 24"
@@ -241,7 +241,7 @@ export const AuthForm = ({ mode }: AuthFormProps) => {
                       fill="none"
                       stroke="currentColor"
                       strokeWidth="1.8"
-                      className="h-[18px] w-[18px]"
+                      className="h-4.5 w-4.5"
                       aria-hidden="true"
                     >
                       <circle cx="12" cy="8" r="3" />
@@ -274,7 +274,7 @@ export const AuthForm = ({ mode }: AuthFormProps) => {
                     fill="none"
                     stroke="currentColor"
                     strokeWidth="1.8"
-                    className="h-[18px] w-[18px]"
+                    className="h-4.5 w-4.5"
                     aria-hidden="true"
                   >
                     <rect x="3" y="5" width="18" height="14" rx="2.3" />
@@ -347,7 +347,7 @@ export const AuthForm = ({ mode }: AuthFormProps) => {
             ) : null}
 
             <button
-              className="group relative flex h-10 w-full items-center justify-center overflow-hidden rounded-xl bg-gradient-to-r from-trust-700 via-trust-600 to-trust-500 text-sm font-semibold text-white shadow-[0_14px_26px_rgba(31,135,70,0.3)] transition-all duration-200 hover:shadow-[0_18px_30px_rgba(31,135,70,0.38)] active:scale-[0.99] disabled:cursor-not-allowed disabled:opacity-60"
+              className="group relative flex h-10 w-full items-center justify-center overflow-hidden rounded-xl bg-linear-to-r from-trust-700 via-trust-600 to-trust-500 text-sm font-semibold text-white shadow-[0_14px_26px_rgba(31,135,70,0.3)] transition-all duration-200 hover:shadow-[0_18px_30px_rgba(31,135,70,0.38)] active:scale-[0.99] disabled:cursor-not-allowed disabled:opacity-60"
               type="submit"
               disabled={isAuthPending || !canSubmit}
             >
