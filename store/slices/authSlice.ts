@@ -35,6 +35,10 @@ const authSlice = createSlice({
     updateAccessToken: (state, action: PayloadAction<string>) => {
       state.accessToken = action.payload;
     },
+    updateUser: (state, action: PayloadAction<AuthUser>) => {
+      state.user = action.payload;
+      state.hydrated = true;
+    },
     clearSession: (state) => {
       state.accessToken = null;
       state.refreshToken = null;
@@ -47,7 +51,7 @@ const authSlice = createSlice({
   },
 });
 
-export const { setSession, updateAccessToken, clearSession, setHydrated } =
+export const { setSession, updateAccessToken, updateUser, clearSession, setHydrated } =
   authSlice.actions;
 
 export default authSlice.reducer;

@@ -1,3 +1,5 @@
+/* eslint-disable @next/next/no-img-element */
+
 import { Badge } from "@/components/ui/Badge";
 import { Card, CardBody, CardHeader, CardTitle } from "@/components/ui/Card";
 import type { CompleteProfile } from "@/types/profile";
@@ -8,12 +10,64 @@ interface ProfileCardProps {
 
 export const ProfileCard = ({ data }: ProfileCardProps) => {
   const { profile, stats } = data;
+  const publicPath = profile.publicProfileUrl ? `/in/${profile.publicProfileUrl}` : null;
 
   return (
     <Card className="h-fit">
-      <CardHeader className="mb-0 block">
-        <CardTitle>{profile.name ?? "Anonymous Professional"}</CardTitle>
-        <p className="mt-1 text-sm text-surface-600">{profile.headline ?? profile.email}</p>
+      <div
+        className="h-24 rounded-xl border border-surface-300 bg-cover bg-center"
+        style={
+          profile.profileBannerUrl
+            ? { backgroundImage: `url(${profile.profileBannerUrl})` }
+            : undefined
+        }
+      >
+        {!profile.profileBannerUrl ? (
+          <div className="flex h-full items-center justify-center text-xs text-surface-500">
+            Add a profile banner
+          </div>
+        ) : null}
+      </div>
+
+      <CardHeader className="mb-0 mt-3 block">
+        <div className="flex items-start gap-3">
+          <div className="h-14 w-14 overflow-hidden rounded-full border border-surface-300 bg-surface-100">
+            {profile.profileImageUrl ? (
+              <img
+                src={profile.profileImageUrl}
+                alt={profile.name ?? "Profile"}
+                className="h-full w-full object-cover"
+              />
+            ) : (
+              <div className="flex h-full items-center justify-center text-xs font-semibold text-surface-500">
+                {(profile.name ?? "ZT").slice(0, 2).toUpperCase()}
+              </div>
+            )}
+          </div>
+
+          <div className="min-w-0 flex-1">
+            <CardTitle>{profile.name ?? "Anonymous Professional"}</CardTitle>
+            <p className="mt-1 text-sm text-surface-600">{profile.headline ?? profile.email}</p>
+            {profile.currentRole ? (
+              <p className="mt-1 text-sm text-surface-600">{profile.currentRole}</p>
+            ) : null}
+          </div>
+        </div>
+
+        {publicPath ? (
+          <a
+            href={publicPath}
+            target="_blank"
+            rel="noreferrer"
+            className="mt-2 inline-block text-sm font-medium text-trust-700 hover:text-trust-800"
+          >
+            {publicPath}
+          </a>
+        ) : null}
+
+        {profile.about ? (
+          <p className="mt-3 text-sm text-surface-700">{profile.about}</p>
+        ) : null}
       </CardHeader>
 
       <CardBody>

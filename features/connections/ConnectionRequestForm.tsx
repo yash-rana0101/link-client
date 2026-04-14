@@ -47,16 +47,16 @@ export const ConnectionRequestForm = ({
   return (
     <Card className="space-y-3">
       <div>
-        <h3 className="text-lg font-semibold text-surface-900">Request Connection</h3>
+        <h3 className="text-lg font-semibold text-surface-900">Grow your network</h3>
         <p className="text-sm text-surface-600">
-          Send a trust-graph request using the target user ID.
+          Send a direct trust request using a member user ID.
         </p>
       </div>
 
       <form className="space-y-3" onSubmit={handleSubmit}>
         <div>
           <label className="mb-1 block text-sm font-medium text-surface-700">
-            Receiver User ID
+            Member User ID
           </label>
           <Input
             value={receiverId}

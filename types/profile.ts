@@ -24,6 +24,22 @@ export interface Profile {
   headline: string | null;
   about: string | null;
   profileImageUrl: string | null;
+  profileBannerUrl: string | null;
+  publicProfileUrl: string | null;
+  skills: Skill[];
+  trustScore: number;
+  createdAt: string;
+}
+
+export interface PublicProfileUser {
+  id: string;
+  name: string | null;
+  currentRole: string | null;
+  headline: string | null;
+  about: string | null;
+  profileImageUrl: string | null;
+  profileBannerUrl: string | null;
+  publicProfileUrl: string | null;
   skills: Skill[];
   trustScore: number;
   createdAt: string;
@@ -103,6 +119,13 @@ export interface CompleteProfile {
   certificates: Certificate[];
   connections: ConnectionSummary[];
   posts: LightweightPost[];
+}
+
+export interface PublicProfile {
+  profile: PublicProfileUser;
+  stats: ProfileStats;
+  experiences: Experience[];
+  certificates: Certificate[];
 }
 
 export interface CompletionGuide {

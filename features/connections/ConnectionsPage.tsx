@@ -55,26 +55,83 @@ export default function ConnectionsPage() {
     );
   }
 
+  const pendingRequests = pendingQuery.data ?? [];
+  const acceptedConnections = connectionsQuery.data ?? [];
   const requestError = requestMutation.error?.message ?? null;
+  const manageItems = [
+    { label: "Connections", value: String(acceptedConnections.length), marker: "C" },
+    { label: "Invitations", value: String(pendingRequests.length), marker: "I" },
+    { label: "Verification", value: "Active", marker: "V" },
+    { label: "Messages", value: "Ready", marker: "M" },
+  ];
 
   return (
-    <section className="space-y-6">
-      <div className="grid gap-4 lg:grid-cols-[1fr_1fr]">
+    <section className="grid gap-5 lg:grid-cols-[18.75rem_1fr]">
+      <aside className="space-y-4">
+        <div className="overflow-hidden rounded-2xl border border-surface-300 bg-white">
+          <div className="border-b border-surface-200 px-4 py-4">
+            <h2 className="text-lg font-semibold text-surface-900">Manage network</h2>
+          </div>
+
+          <div className="divide-y divide-surface-200">
+            {manageItems.map((item) => (
+              <div key={item.label} className="flex items-center justify-between gap-3 px-4 py-3">
+                <div className="flex items-center gap-3">
+                  <span className="inline-flex h-8 w-8 items-center justify-center rounded-full border border-surface-300 bg-surface-100 text-xs font-semibold text-surface-700">
+                    {item.marker}
+                  </span>
+                  <span className="text-sm font-medium text-surface-800">{item.label}</span>
+                </div>
+                <span className="text-sm font-semibold text-surface-600">{item.value}</span>
+              </div>
+            ))}
+          </div>
+        </div>
+
         <ConnectionRequestForm
           onSubmit={(payload) => requestMutation.mutate(payload)}
           isSubmitting={requestMutation.isPending}
           errorMessage={requestError}
         />
+      </aside>
 
-        <div className="rounded-2xl border border-surface-300 bg-white p-4">
-          <h3 className="text-lg font-semibold text-surface-900">Pending Requests</h3>
-          <p className="mt-1 text-sm text-surface-600">
-            Incoming requests waiting for your decision.
-          </p>
+      <div className="space-y-4">
+        <div className="rounded-2xl border border-surface-300 bg-white p-2">
+          <div className="flex flex-wrap gap-2">
+            <button
+              type="button"
+              className="rounded-full bg-brand-500 px-5 py-2 text-sm font-semibold text-white"
+            >
+              Grow
+            </button>
+            <button
+              type="button"
+              disabled
+              className="rounded-full border border-surface-300 bg-surface-100 px-5 py-2 text-sm font-semibold text-surface-500"
+            >
+              Catch up
+            </button>
+          </div>
+        </div>
 
-          <div className="mt-4 space-y-3">
-            {pendingQuery.data?.length ? (
-              pendingQuery.data.map((request) => (
+        <div className="overflow-hidden rounded-2xl border border-surface-300 bg-white">
+          <div className="flex items-center justify-between border-b border-surface-200 px-4 py-4">
+            <h3 className="text-lg font-semibold text-surface-900">
+              Invitations ({pendingRequests.length})
+            </h3>
+            {pendingRequests.length > 3 ? (
+              <button
+                type="button"
+                className="text-sm font-semibold text-brand-600 transition hover:text-brand-700"
+              >
+                Show all
+              </button>
+            ) : null}
+          </div>
+
+          {pendingRequests.length ? (
+            <div className="divide-y divide-surface-200">
+              {pendingRequests.map((request) => (
                 <PendingRequestCard
                   key={request.id}
                   request={request}
@@ -86,42 +143,48 @@ export default function ConnectionsPage() {
                     respondMutation.variables?.connectionId === request.id
                   }
                 />
-              ))
-            ) : (
-              <EmptyState
-                title="No pending requests"
-                description="You are fully up to date."
-              />
-            )}
-          </div>
-        </div>
-      </div>
-
-      <div>
-        <h2 className="text-xl font-semibold text-surface-900">Accepted Connections</h2>
-        <p className="text-sm text-surface-600">
-          Active trust relationships in your network.
-        </p>
-
-        <div className="mt-4 space-y-3">
-          {connectionsQuery.data?.length ? (
-            connectionsQuery.data.map((connection) => (
-              <ConnectionCard
-                key={connection.id}
-                connection={connection}
-                currentUserId={user.id}
-                onRemove={(connectionId) => removeMutation.mutate(connectionId)}
-                isRemoving={
-                  removeMutation.isPending &&
-                  removeMutation.variables === connection.id
-                }
-              />
-            ))
+              ))}
+            </div>
           ) : (
-            <EmptyState
-              title="No accepted connections"
-              description="Send your first request to start building your graph."
-            />
+            <div className="p-8">
+              <EmptyState
+                title="No pending invitations"
+                description="New connection requests will show up here."
+              />
+            </div>
+          )}
+        </div>
+
+        <div className="overflow-hidden rounded-2xl border border-surface-300 bg-white">
+          <div className="border-b border-surface-200 px-4 py-4">
+            <h3 className="text-lg font-semibold text-surface-900">Your trusted connections</h3>
+            <p className="text-sm text-surface-600">
+              Active trust relationships in your network.
+            </p>
+          </div>
+
+          {acceptedConnections.length ? (
+            <div className="divide-y divide-surface-200">
+              {acceptedConnections.map((connection) => (
+                <ConnectionCard
+                  key={connection.id}
+                  connection={connection}
+                  currentUserId={user.id}
+                  onRemove={(connectionId) => removeMutation.mutate(connectionId)}
+                  isRemoving={
+                    removeMutation.isPending &&
+                    removeMutation.variables === connection.id
+                  }
+                />
+              ))}
+            </div>
+          ) : (
+            <div className="p-8">
+              <EmptyState
+                title="No accepted connections"
+                description="Send your first request to start building your graph."
+              />
+            </div>
           )}
         </div>
       </div>

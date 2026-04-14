@@ -6,6 +6,8 @@ export interface AuthUser {
   headline?: string | null;
   about?: string | null;
   profileImageUrl?: string | null;
+  profileBannerUrl?: string | null;
+  publicProfileUrl?: string | null;
   trustScore: number;
 }
 

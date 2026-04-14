@@ -43,6 +43,8 @@ const normalizeUser = (value: unknown): AuthUser | null => {
     headline: maybeUser.headline ?? null,
     about: maybeUser.about ?? null,
     profileImageUrl: maybeUser.profileImageUrl ?? null,
+    profileBannerUrl: maybeUser.profileBannerUrl ?? null,
+    publicProfileUrl: maybeUser.publicProfileUrl ?? null,
     trustScore: maybeUser.trustScore,
   };
 };

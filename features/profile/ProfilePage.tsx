@@ -5,6 +5,7 @@ import { Card } from "@/components/ui/Card";
 import { Spinner } from "@/components/ui/Spinner";
 import { EmptyState, ErrorState } from "@/components/common/State";
 import { ExperienceCard } from "@/features/profile/ExperienceCard";
+import { ProfileEditorCard } from "@/features/profile/ProfileEditorCard";
 import { ProfileCard } from "@/features/profile/ProfileCard";
 import { useProfile } from "@/features/profile/useProfile";
 
@@ -116,6 +117,8 @@ export default function ProfilePage() {
       </div>
 
       <div className="space-y-4">
+        <ProfileEditorCard profile={profileQuery.data.profile} />
+
         <div>
           <h2 className="text-xl font-semibold text-surface-900">Experience</h2>
           <p className="text-sm text-surface-600">
