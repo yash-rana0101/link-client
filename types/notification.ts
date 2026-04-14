@@ -7,7 +7,8 @@ export type NotificationType =
   | "POST_LIKED"
   | "POST_COMMENTED"
   | "JOB_APPLIED"
-  | "APPLICATION_STATUS_UPDATED";
+  | "APPLICATION_STATUS_UPDATED"
+  | "PROFILE_VIEWED";
 
 export interface NotificationItem {
   id: string;

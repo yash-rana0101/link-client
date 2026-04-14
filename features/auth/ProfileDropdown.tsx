@@ -82,6 +82,7 @@ export const ProfileDropdown = ({
   const displayRole =
     user?.currentRole ?? user?.headline ?? "ZeroTrust professional network member";
   const publicProfileHref = user?.publicProfileUrl ? `/in/${user.publicProfileUrl}` : null;
+  const identityHref = publicProfileHref ?? "/profile";
 
   useEffect(() => {
     if (!open) {
@@ -165,7 +166,11 @@ export const ProfileDropdown = ({
           className="absolute right-0 z-50 mt-2 w-[min(22rem,90vw)] overflow-hidden rounded-2xl border border-surface-300 bg-[#f4f6f3] shadow-xl"
         >
           <div className="p-4">
-            <div className="flex items-start gap-3 rounded-xl border border-surface-300 bg-white p-3">
+            <Link
+              href={identityHref}
+              onClick={closeMenu}
+              className="flex items-start gap-3 rounded-xl border border-surface-300 bg-white p-3 transition-colors duration-200 hover:bg-surface-100"
+            >
               <div className="flex h-11 w-11 shrink-0 items-center justify-center overflow-hidden rounded-full border border-trust-200 bg-trust-100 text-sm font-semibold text-trust-700">
                 {user?.profileImageUrl ? (
                   <img
@@ -185,7 +190,7 @@ export const ProfileDropdown = ({
                 </div>
                 <p className="mt-1 text-sm leading-snug text-surface-700">{displayRole}</p>
               </div>
-            </div>
+            </Link>
 
             <Link
               href="/profile"

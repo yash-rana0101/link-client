@@ -1,5 +1,6 @@
 "use client";
 
+import Link from "next/link";
 import { Button } from "@/components/ui/Button";
 import { Card } from "@/components/ui/Card";
 import { Spinner } from "@/components/ui/Spinner";
@@ -8,6 +9,7 @@ import { ExperienceCard } from "@/features/profile/ExperienceCard";
 import { ProfileEditorCard } from "@/features/profile/ProfileEditorCard";
 import { ProfileCard } from "@/features/profile/ProfileCard";
 import { useProfile } from "@/features/profile/useProfile";
+import { formatDateTime } from "@/lib/date";
 
 const guideColor = (percent?: number) => {
   if (!percent) {
@@ -74,7 +76,7 @@ const guideWidthClass = (percent?: number) => {
 };
 
 export default function ProfilePage() {
-  const { profileQuery, guideQuery } = useProfile();
+  const { profileQuery, guideQuery, profileViewsQuery } = useProfile();
 
   if (profileQuery.isLoading) {
     return (
@@ -97,55 +99,124 @@ export default function ProfilePage() {
   const guidePercent = guideQuery.data?.completion.percent;
 
   return (
-    <div className="grid gap-6 lg:grid-cols-[320px_1fr]">
-      <div className="space-y-4">
-        <ProfileCard data={profileQuery.data} />
-        <Card>
-          <p className="text-sm font-semibold text-surface-900">Profile Completion</p>
-          <div className="mt-3 h-2 w-full rounded-full bg-surface-200">
-            <div
-              className={`h-2 rounded-full transition-all ${guideColor(guidePercent)} ${guideWidthClass(guidePercent)}`}
-            />
-          </div>
-          <p className="mt-2 text-sm text-surface-600">
-            {guidePercent ?? 0}% complete
-          </p>
-          {guideQuery.data?.feedback ? (
-            <p className="mt-3 text-sm text-surface-700">{guideQuery.data.feedback}</p>
-          ) : null}
-        </Card>
-      </div>
+    <div className="space-y-6">
+      <ProfileCard data={profileQuery.data} />
 
-      <div className="space-y-4">
-        <ProfileEditorCard profile={profileQuery.data.profile} />
+      <div className="grid gap-6 lg:grid-cols-[320px_1fr]">
+        <div className="space-y-4">
+          <Card>
+            <p className="text-sm font-semibold text-surface-900">Profile Completion</p>
+            <div className="mt-3 h-2 w-full rounded-full bg-surface-200">
+              <div
+                className={`h-2 rounded-full transition-all ${guideColor(guidePercent)} ${guideWidthClass(guidePercent)}`}
+              />
+            </div>
+            <p className="mt-2 text-sm text-surface-600">
+              {guidePercent ?? 0}% complete
+            </p>
+            {guideQuery.data?.feedback ? (
+              <p className="mt-3 text-sm text-surface-700">{guideQuery.data.feedback}</p>
+            ) : null}
+          </Card>
 
-        <div>
-          <h2 className="text-xl font-semibold text-surface-900">Experience</h2>
-          <p className="text-sm text-surface-600">
-            Professional history and evidence-backed artifacts.
-          </p>
+          <Card>
+            <div className="flex items-center justify-between gap-2">
+              <p className="text-sm font-semibold text-surface-900">Who viewed your profile</p>
+              {profileViewsQuery.isFetching ? (
+                <span className="text-xs text-surface-500">Refreshing...</span>
+              ) : null}
+            </div>
+
+            {profileViewsQuery.isLoading ? (
+              <div className="mt-3 flex items-center justify-center py-4">
+                <Spinner className="h-5 w-5" />
+              </div>
+            ) : null}
+
+            {profileViewsQuery.isError ? (
+              <p className="mt-3 text-sm text-surface-600">
+                Unable to load profile viewers right now.
+              </p>
+            ) : null}
+
+            {profileViewsQuery.data?.length ? (
+              <ul className="mt-3 space-y-2">
+                {profileViewsQuery.data.slice(0, 6).map((entry) => {
+                  const name = entry.viewer.name ?? "Anonymous professional";
+                  const subtitle = [entry.viewer.currentRole, entry.viewer.location]
+                    .filter(Boolean)
+                    .join(" · ");
+                  const profilePath = entry.viewer.publicProfileUrl
+                    ? `/in/${entry.viewer.publicProfileUrl}`
+                    : null;
+
+                  return (
+                    <li key={entry.viewer.id} className="rounded-xl border border-surface-200 p-3">
+                      <div className="flex items-start justify-between gap-2">
+                        <div className="min-w-0">
+                          {profilePath ? (
+                            <Link href={profilePath} className="text-sm font-medium text-trust-700 hover:text-trust-800">
+                              {name}
+                            </Link>
+                          ) : (
+                            <p className="text-sm font-medium text-surface-800">{name}</p>
+                          )}
+                          {subtitle ? (
+                            <p className="mt-1 truncate text-xs text-surface-600">{subtitle}</p>
+                          ) : null}
+                          <p className="mt-1 text-xs text-surface-500">
+                            Last viewed: {formatDateTime(entry.lastViewedAt)}
+                          </p>
+                        </div>
+                        <span className="rounded-full bg-surface-100 px-2 py-0.5 text-xs font-medium text-surface-700">
+                          {entry.viewCount} views
+                        </span>
+                      </div>
+                    </li>
+                  );
+                })}
+              </ul>
+            ) : null}
+
+            {!profileViewsQuery.isLoading && !profileViewsQuery.isError && !profileViewsQuery.data?.length ? (
+              <p className="mt-3 text-sm text-surface-600">
+                No profile views yet. Share your public profile URL to increase visibility.
+              </p>
+            ) : null}
+          </Card>
         </div>
 
-        {profileQuery.data.experiences.length ? (
-          <div className="space-y-3">
-            {profileQuery.data.experiences.map((experience) => (
-              <ExperienceCard key={experience.id} experience={experience} />
-            ))}
-          </div>
-        ) : (
-          <EmptyState
-            title="No experiences yet"
-            description="Add your first role to start building trust context."
-          />
-        )}
+        <div className="space-y-4">
+          <ProfileEditorCard profile={profileQuery.data.profile} />
 
-        <Card>
-          <h3 className="text-lg font-semibold text-surface-900">Connections</h3>
-          <p className="mt-2 text-sm text-surface-600">
-            {profileQuery.data.connections.length} accepted relationships in your
-            trust graph.
-          </p>
-        </Card>
+          <div>
+            <h2 className="text-xl font-semibold text-surface-900">Experience</h2>
+            <p className="text-sm text-surface-600">
+              Professional history and evidence-backed artifacts.
+            </p>
+          </div>
+
+          {profileQuery.data.experiences.length ? (
+            <div className="space-y-3">
+              {profileQuery.data.experiences.map((experience) => (
+                <ExperienceCard key={experience.id} experience={experience} />
+              ))}
+            </div>
+          ) : (
+            <EmptyState
+              title="No experiences yet"
+              description="Add your first role to start building trust context."
+            />
+          )}
+
+          <Card>
+            <h3 className="text-lg font-semibold text-surface-900">Connections</h3>
+            <p className="mt-2 text-sm text-surface-600">
+              {profileQuery.data.connections.length} accepted relationships in your
+              trust graph.
+            </p>
+          </Card>
+        </div>
       </div>
     </div>
   );

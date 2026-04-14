@@ -4,6 +4,8 @@ export interface MessageSender {
   id: string;
   name: string | null;
   email: string;
+  profileImageUrl: string | null;
+  publicProfileUrl: string | null;
   trustScore: number;
 }
 

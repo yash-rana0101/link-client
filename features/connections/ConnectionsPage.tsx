@@ -4,7 +4,6 @@ import { Button } from "@/components/ui/Button";
 import { Spinner } from "@/components/ui/Spinner";
 import { EmptyState, ErrorState } from "@/components/common/State";
 import { ConnectionCard } from "@/features/connections/ConnectionCard";
-import { ConnectionRequestForm } from "@/features/connections/ConnectionRequestForm";
 import { PendingRequestCard } from "@/features/connections/PendingRequestCard";
 import { useConnections } from "@/features/connections/useConnections";
 import { useAppSelector } from "@/store/hooks";
@@ -14,7 +13,6 @@ export default function ConnectionsPage() {
   const {
     connectionsQuery,
     pendingQuery,
-    requestMutation,
     respondMutation,
     removeMutation,
   } = useConnections();
@@ -57,7 +55,6 @@ export default function ConnectionsPage() {
 
   const pendingRequests = pendingQuery.data ?? [];
   const acceptedConnections = connectionsQuery.data ?? [];
-  const requestError = requestMutation.error?.message ?? null;
   const manageItems = [
     { label: "Connections", value: String(acceptedConnections.length), marker: "C" },
     { label: "Invitations", value: String(pendingRequests.length), marker: "I" },
@@ -87,32 +84,9 @@ export default function ConnectionsPage() {
             ))}
           </div>
         </div>
-
-        <ConnectionRequestForm
-          onSubmit={(payload) => requestMutation.mutate(payload)}
-          isSubmitting={requestMutation.isPending}
-          errorMessage={requestError}
-        />
       </aside>
 
       <div className="space-y-4">
-        <div className="rounded-2xl border border-surface-300 bg-white p-2">
-          <div className="flex flex-wrap gap-2">
-            <button
-              type="button"
-              className="rounded-full bg-brand-500 px-5 py-2 text-sm font-semibold text-white"
-            >
-              Grow
-            </button>
-            <button
-              type="button"
-              disabled
-              className="rounded-full border border-surface-300 bg-surface-100 px-5 py-2 text-sm font-semibold text-surface-500"
-            >
-              Catch up
-            </button>
-          </div>
-        </div>
 
         <div className="overflow-hidden rounded-2xl border border-surface-300 bg-white">
           <div className="flex items-center justify-between border-b border-surface-200 px-4 py-4">

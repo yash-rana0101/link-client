@@ -11,6 +11,8 @@ export interface VerificationItem {
   verifier: {
     id: string;
     name: string | null;
+    profileImageUrl?: string | null;
+    publicProfileUrl?: string | null;
   };
 }
 

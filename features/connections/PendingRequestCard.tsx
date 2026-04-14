@@ -1,3 +1,6 @@
+/* eslint-disable @next/next/no-img-element */
+
+import Link from "next/link";
 import { memo } from "react";
 import { Button } from "@/components/ui/Button";
 import { formatDateTime } from "@/lib/date";
@@ -23,20 +26,57 @@ const PendingRequestCardComponent = ({
   isPending,
 }: PendingRequestCardProps) => {
   const requesterName = request.requester.name ?? request.requester.email;
+  const profileHref = request.requester.publicProfileUrl
+    ? `/in/${request.requester.publicProfileUrl}`
+    : null;
 
   return (
     <article className="flex flex-wrap items-center gap-3 px-4 py-4 sm:flex-nowrap">
-      <div className="flex h-14 w-14 shrink-0 items-center justify-center rounded-full border border-surface-300 bg-surface-100 text-sm font-semibold text-surface-700">
-        {getInitials(requesterName)}
-      </div>
+      {profileHref ? (
+        <Link
+          href={profileHref}
+          className="flex h-14 w-14 shrink-0 items-center justify-center overflow-hidden rounded-full border border-surface-300 bg-surface-100 text-sm font-semibold text-surface-700 transition-transform duration-200 hover:scale-[1.04]"
+        >
+          {request.requester.profileImageUrl ? (
+            <img
+              src={request.requester.profileImageUrl}
+              alt={requesterName}
+              className="h-full w-full object-cover"
+            />
+          ) : (
+            getInitials(requesterName)
+          )}
+        </Link>
+      ) : (
+        <div className="flex h-14 w-14 shrink-0 items-center justify-center overflow-hidden rounded-full border border-surface-300 bg-surface-100 text-sm font-semibold text-surface-700">
+          {request.requester.profileImageUrl ? (
+            <img
+              src={request.requester.profileImageUrl}
+              alt={requesterName}
+              className="h-full w-full object-cover"
+            />
+          ) : (
+            getInitials(requesterName)
+          )}
+        </div>
+      )}
 
       <div className="min-w-0 flex-1">
-        <p className="text-xl font-semibold leading-tight text-surface-900 sm:text-[1.32rem]">
-          {requesterName}
+        <div className="text-xl font-semibold leading-tight text-surface-900 sm:text-[1.32rem]">
+          {profileHref ? (
+            <Link
+              href={profileHref}
+              className="transition-colors duration-200 hover:text-trust-700"
+            >
+              {requesterName}
+            </Link>
+          ) : (
+            requesterName
+          )}
           <span className="ml-2 text-base font-normal text-surface-700">
             invited you to connect
           </span>
-        </p>
+        </div>
         <p className="mt-0.5 text-sm text-surface-600">{request.requester.email}</p>
         <p className="mt-1 text-sm text-surface-600">
           Context: {request.relationship.replaceAll("_", " ")}

@@ -27,7 +27,8 @@ export const useFeed = () => {
   });
 
   const createPostMutation = useMutation({
-    mutationFn: (content: string) => postService.createPost(content),
+    mutationFn: ({ content, imageUrl }: { content: string; imageUrl?: string | null }) =>
+      postService.createPost({ content, imageUrl }),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: FEED_QUERY_KEY });
     },
@@ -43,8 +44,9 @@ export const useFeed = () => {
   const commentMutation = useMutation({
     mutationFn: ({ postId, content }: { postId: string; content: string }) =>
       postService.commentOnPost(postId, content),
-    onSuccess: () => {
+    onSuccess: (_createdComment, variables) => {
       queryClient.invalidateQueries({ queryKey: FEED_QUERY_KEY });
+      queryClient.invalidateQueries({ queryKey: ["post", variables.postId] });
     },
   });
 

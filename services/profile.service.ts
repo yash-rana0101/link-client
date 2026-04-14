@@ -2,11 +2,12 @@ import { api, unwrapData } from "@/services/api";
 import type {
   CompleteProfile,
   CompletionGuide,
+  ProfileViewer,
   PublicProfile,
   Profile,
 } from "@/types/profile";
 
-export type UploadAssetKind = "PROFILE_IMAGE" | "PROFILE_BANNER";
+export type UploadAssetKind = "PROFILE_IMAGE" | "PROFILE_BANNER" | "POST_IMAGE";
 
 export interface UploadSignatureResponse {
   kind: UploadAssetKind;
@@ -22,6 +23,7 @@ export interface UploadSignatureResponse {
 export interface UpdateProfilePayload {
   name?: string;
   currentRole?: string | null;
+  location?: string | null;
   headline?: string | null;
   about?: string | null;
   profileImageUrl?: string | null;
@@ -51,6 +53,16 @@ export const profileService = {
       `/user/public/${encodeURIComponent(publicProfileUrl)}`,
     );
     return unwrapData<PublicProfile>(response);
+  },
+
+  getProfileViews: async (limit = 20): Promise<ProfileViewer[]> => {
+    const response = await api.get<unknown>("/user/me/profile-views", {
+      params: {
+        limit,
+      },
+    });
+
+    return unwrapData<ProfileViewer[]>(response);
   },
 
   createUploadSignature: async (kind: UploadAssetKind): Promise<UploadSignatureResponse> => {

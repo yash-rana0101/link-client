@@ -11,6 +11,7 @@ import { updateUser } from "@/store/slices/authSlice";
 
 export const PROFILE_QUERY_KEY = ["profile", "complete"] as const;
 export const PROFILE_GUIDE_QUERY_KEY = ["profile", "completion-guide"] as const;
+export const PROFILE_VIEWS_QUERY_KEY = ["profile", "views"] as const;
 export const PUBLIC_PROFILE_QUERY_KEY = "profile-public";
 
 export const useProfile = () => {
@@ -28,9 +29,17 @@ export const useProfile = () => {
     retry: 2,
   });
 
+  const profileViewsQuery = useQuery({
+    queryKey: PROFILE_VIEWS_QUERY_KEY,
+    queryFn: () => profileService.getProfileViews(20),
+    staleTime: 30_000,
+    retry: 2,
+  });
+
   return {
     profileQuery,
     guideQuery,
+    profileViewsQuery,
   };
 };
 
@@ -50,6 +59,7 @@ export const useUpdateProfile = () => {
           ...currentUser,
           name: profile.name,
           currentRole: profile.currentRole,
+          location: profile.location,
           headline: profile.headline,
           about: profile.about,
           profileImageUrl: profile.profileImageUrl,
@@ -75,9 +85,13 @@ export const useUpdateProfile = () => {
   });
 };
 
-export const usePublicProfile = (publicProfileUrl: string) => useQuery({
-  queryKey: [PUBLIC_PROFILE_QUERY_KEY, publicProfileUrl],
-  queryFn: () => profileService.getPublicProfile(publicProfileUrl),
-  enabled: publicProfileUrl.trim().length > 0,
-  retry: 1,
-});
+export const usePublicProfile = (publicProfileUrl: string | null | undefined) => {
+  const normalizedPublicProfileUrl = publicProfileUrl?.trim() ?? "";
+
+  return useQuery({
+    queryKey: [PUBLIC_PROFILE_QUERY_KEY, normalizedPublicProfileUrl],
+    queryFn: () => profileService.getPublicProfile(normalizedPublicProfileUrl),
+    enabled: normalizedPublicProfileUrl.length > 0,
+    retry: 1,
+  });
+};

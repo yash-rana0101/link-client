@@ -21,6 +21,7 @@ export interface Profile {
   email: string;
   name: string | null;
   currentRole: string | null;
+  location: string | null;
   headline: string | null;
   about: string | null;
   profileImageUrl: string | null;
@@ -35,6 +36,7 @@ export interface PublicProfileUser {
   id: string;
   name: string | null;
   currentRole: string | null;
+  location: string | null;
   headline: string | null;
   about: string | null;
   profileImageUrl: string | null;
@@ -90,6 +92,8 @@ export interface ConnectionSummary {
     id: string;
     email: string;
     name: string | null;
+    profileImageUrl: string | null;
+    publicProfileUrl: string | null;
     trustScore: number;
   };
 }
@@ -126,6 +130,22 @@ export interface PublicProfile {
   stats: ProfileStats;
   experiences: Experience[];
   certificates: Certificate[];
+}
+
+export interface ProfileViewer {
+  viewer: {
+    id: string;
+    name: string | null;
+    currentRole: string | null;
+    location: string | null;
+    headline: string | null;
+    profileImageUrl: string | null;
+    publicProfileUrl: string | null;
+    trustScore: number;
+  };
+  firstViewedAt: string;
+  lastViewedAt: string;
+  viewCount: number;
 }
 
 export interface CompletionGuide {

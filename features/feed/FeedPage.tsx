@@ -1,5 +1,7 @@
 "use client";
 
+/* eslint-disable @next/next/no-img-element */
+
 import Link from "next/link";
 import { useMemo, useState } from "react";
 import { Button } from "@/components/ui/Button";
@@ -95,6 +97,7 @@ const LeftSidebar = ({
   trustScore,
   profileViews,
   postImpressions,
+  profileHref,
   closeOnNavigate,
 }: {
   name: string;
@@ -102,16 +105,27 @@ const LeftSidebar = ({
   trustScore: number;
   profileViews: number;
   postImpressions: number;
+  profileHref: string;
   closeOnNavigate?: () => void;
 }) => (
   <div className="space-y-4">
     <article className="rounded-2xl border border-surface-300 bg-surface-100 p-4">
       <div className="flex items-center gap-3">
-        <div className="flex h-12 w-12 items-center justify-center rounded-full border border-trust-200 bg-trust-100 text-sm font-semibold text-trust-700">
+        <Link
+          href={profileHref}
+          onClick={closeOnNavigate}
+          className="flex h-12 w-12 items-center justify-center rounded-full border border-trust-200 bg-trust-100 text-sm font-semibold text-trust-700 transition-transform duration-200 hover:scale-[1.04]"
+        >
           {getInitials(name)}
-        </div>
+        </Link>
         <div className="min-w-0">
-          <p className="truncate font-semibold text-surface-900">{name}</p>
+          <Link
+            href={profileHref}
+            onClick={closeOnNavigate}
+            className="truncate font-semibold text-surface-900 transition-colors duration-200 hover:text-trust-700"
+          >
+            {name}
+          </Link>
           <p className="truncate text-xs text-surface-600">{role}</p>
         </div>
       </div>
@@ -174,7 +188,13 @@ const RightRail = ({
   suggestions,
 }: {
   insightItems: string[];
-  suggestions: Array<{ id: string; name: string; trustScore: number }>;
+  suggestions: Array<{
+    id: string;
+    name: string;
+    trustScore: number;
+    profileImageUrl: string | null;
+    publicProfileUrl: string | null;
+  }>;
 }) => (
   <div className="space-y-4">
     <article className="rounded-2xl border border-surface-300 bg-surface-100 p-4">
@@ -195,9 +215,49 @@ const RightRail = ({
           suggestions.map((item) => (
             <div key={item.id} className="rounded-xl bg-white p-3">
               <div className="flex items-center justify-between gap-2">
-                <div className="min-w-0">
-                  <p className="truncate text-sm font-semibold text-surface-900">{item.name}</p>
-                  <p className="text-xs text-surface-500">Trust {item.trustScore}</p>
+                <div className="flex min-w-0 items-center gap-2">
+                  {item.publicProfileUrl ? (
+                    <Link
+                      href={`/in/${item.publicProfileUrl}`}
+                      className="flex h-9 w-9 shrink-0 items-center justify-center overflow-hidden rounded-full border border-surface-300 bg-surface-100 text-xs font-semibold text-surface-700"
+                    >
+                      {item.profileImageUrl ? (
+                        <img
+                          src={item.profileImageUrl}
+                          alt={item.name}
+                          className="h-full w-full object-cover"
+                        />
+                      ) : (
+                        getInitials(item.name)
+                      )}
+                    </Link>
+                  ) : (
+                    <div className="flex h-9 w-9 shrink-0 items-center justify-center overflow-hidden rounded-full border border-surface-300 bg-surface-100 text-xs font-semibold text-surface-700">
+                      {item.profileImageUrl ? (
+                        <img
+                          src={item.profileImageUrl}
+                          alt={item.name}
+                          className="h-full w-full object-cover"
+                        />
+                      ) : (
+                        getInitials(item.name)
+                      )}
+                    </div>
+                  )}
+
+                  <div className="min-w-0">
+                    {item.publicProfileUrl ? (
+                      <Link
+                        href={`/in/${item.publicProfileUrl}`}
+                        className="truncate text-sm font-semibold text-surface-900 transition-colors duration-200 hover:text-trust-700"
+                      >
+                        {item.name}
+                      </Link>
+                    ) : (
+                      <p className="truncate text-sm font-semibold text-surface-900">{item.name}</p>
+                    )}
+                    <p className="text-xs text-surface-500">Trust {item.trustScore}</p>
+                  </div>
                 </div>
                 <button
                   type="button"
@@ -299,6 +359,8 @@ export default function FeedPage() {
         id: post.user.id,
         name: post.user.name ?? post.user.email,
         trustScore: post.user.trustScore,
+        profileImageUrl: post.user.profileImageUrl,
+        publicProfileUrl: post.user.publicProfileUrl,
       }))
       .filter((item) => {
         if (item.id === user?.id || seen.has(item.id)) {
@@ -390,6 +452,7 @@ export default function FeedPage() {
               trustScore={clampScore(user?.trustScore ?? 82)}
               profileViews={profileViews}
               postImpressions={postImpressions}
+              profileHref={user?.publicProfileUrl ? `/in/${user.publicProfileUrl}` : "/profile"}
               closeOnNavigate={() => setMobileSidebarOpen(false)}
             />
           </div>
@@ -404,14 +467,21 @@ export default function FeedPage() {
             trustScore={clampScore(user?.trustScore ?? 82)}
             profileViews={profileViews}
             postImpressions={postImpressions}
+            profileHref={user?.publicProfileUrl ? `/in/${user.publicProfileUrl}` : "/profile"}
           />
         </aside>
 
         <div className="space-y-4">
           <PostComposer
-            onCreatePost={(content) => createPostMutation.mutate(content)}
+            onCreatePost={({ content, imageUrl }) =>
+              createPostMutation.mutateAsync({ content, imageUrl })
+            }
             isSubmitting={createPostMutation.isPending}
             authorName={user?.name ?? user?.email ?? "Yash Rana"}
+            authorImageUrl={user?.profileImageUrl ?? null}
+            authorProfileHref={
+              user?.publicProfileUrl ? `/in/${user.publicProfileUrl}` : "/profile"
+            }
           />
 
           <div className="overflow-x-auto">
@@ -453,9 +523,9 @@ export default function FeedPage() {
                   key={post.id}
                   post={post}
                   signal={signalByPostId.get(post.id) ?? "insights"}
-                  onLike={(postId) => likeMutation.mutate(postId)}
+                  onLike={(postId) => likeMutation.mutateAsync(postId)}
                   onComment={(postId, content) =>
-                    commentMutation.mutate({ postId, content })
+                    commentMutation.mutateAsync({ postId, content })
                   }
                   isLikePending={likeMutation.isPending && likePendingPostId === post.id}
                   isCommentPending={

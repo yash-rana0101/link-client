@@ -1,16 +1,11 @@
 import type { Metadata } from "next";
-import { Manrope, Source_Serif_4 } from "next/font/google";
+import { Inter } from "next/font/google";
+import { RouteFooter } from "@/components/common/RouteFooter";
 import ProvidersTree from "@/app/providers";
 import "./globals.css";
 
-const manrope = Manrope({
+const inter = Inter({
   variable: "--font-body",
-  subsets: ["latin"],
-  display: "swap",
-});
-
-const sourceSerif = Source_Serif_4({
-  variable: "--font-heading",
   subsets: ["latin"],
   display: "swap",
 });
@@ -28,10 +23,11 @@ export default function RootLayout({
   return (
     <html
       lang="en"
-      className={`${manrope.variable} ${sourceSerif.variable} h-full`}
+      className={`${inter.variable} h-full`}
     >
       <body className="min-h-full text-surface-900 antialiased">
         <ProvidersTree>{children}</ProvidersTree>
+        <RouteFooter />
       </body>
     </html>
   );

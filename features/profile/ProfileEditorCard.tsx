@@ -24,6 +24,7 @@ interface ProfileEditorCardProps {
 interface ProfileFormState {
   name: string;
   currentRole: string;
+  location: string;
   headline: string;
   about: string;
   publicProfileUrl: string;
@@ -37,6 +38,7 @@ const toSkillsInput = (skills: Profile["skills"]) => skills.map((skill) => skill
 const toInitialState = (profile: Profile): ProfileFormState => ({
   name: profile.name ?? "",
   currentRole: profile.currentRole ?? "",
+  location: profile.location ?? "",
   headline: profile.headline ?? "",
   about: profile.about ?? "",
   publicProfileUrl: profile.publicProfileUrl ?? "",
@@ -137,6 +139,7 @@ export const ProfileEditorCard = ({ profile }: ProfileEditorCardProps) => {
     const payload: UpdateProfilePayload = {
       name: trimmedName,
       currentRole: form.currentRole.trim() || null,
+      location: form.location.trim() || null,
       headline: form.headline.trim() || null,
       about: form.about.trim() || null,
       profileImageUrl: form.profileImageUrl.trim() || null,
@@ -266,6 +269,16 @@ export const ProfileEditorCard = ({ profile }: ProfileEditorCardProps) => {
             onChange={(event) => handleFieldChange("currentRole", event.target.value)}
             placeholder="Backend Engineer"
             maxLength={160}
+          />
+        </div>
+
+        <div>
+          <label className="mb-1 block text-sm font-medium text-surface-700">Location</label>
+          <Input
+            value={form.location}
+            onChange={(event) => handleFieldChange("location", event.target.value)}
+            placeholder="Bengaluru, India"
+            maxLength={120}
           />
         </div>
 

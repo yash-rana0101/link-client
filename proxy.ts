@@ -4,11 +4,13 @@ const PUBLIC_ROUTES = new Set(["/login", "/signup"]);
 const PROTECTED_PREFIXES = [
   "/feed",
   "/profile",
+  "/in",
   "/connections",
   "/verification",
   "/messaging",
   "/jobs",
   "/notifications",
+  "/search",
 ];
 
 const isProtectedPath = (pathname: string) =>

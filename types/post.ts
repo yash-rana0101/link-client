@@ -4,6 +4,8 @@ export interface PostAuthor {
   id: string;
   name: string | null;
   email: string;
+  profileImageUrl: string | null;
+  publicProfileUrl: string | null;
   trustScore: number;
 }
 
@@ -20,6 +22,7 @@ export interface PostItem {
   id: string;
   userId: string;
   content: string;
+  imageUrl: string | null;
   createdAt: string;
   user: PostAuthor;
   likeCount: number;

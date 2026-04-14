@@ -1,5 +1,8 @@
 "use client";
 
+/* eslint-disable @next/next/no-img-element */
+
+import Link from "next/link";
 import { useMemo, useState } from "react";
 import { Badge } from "@/components/ui/Badge";
 import { Button } from "@/components/ui/Button";
@@ -20,6 +23,14 @@ const statusBadgeVariant = (status: string) => {
 
   return "neutral" as const;
 };
+
+const getInitials = (value: string) =>
+  value
+    .split(/\s+/)
+    .filter(Boolean)
+    .slice(0, 2)
+    .map((part) => part[0]?.toUpperCase() ?? "")
+    .join("") || "ZT";
 
 export default function VerificationPage() {
   const { user } = useAppSelector((state) => state.auth);
@@ -113,14 +124,57 @@ export default function VerificationPage() {
                       const checked = selectedVerifierIds.includes(
                         connection.otherUser.id,
                       );
+                      const displayName =
+                        connection.otherUser.name ?? connection.otherUser.email;
+                      const profileHref = connection.otherUser.publicProfileUrl
+                        ? `/in/${connection.otherUser.publicProfileUrl}`
+                        : null;
 
                       return (
-                        <label
+                        <div
                           key={connection.id}
                           className="flex items-center justify-between rounded-lg border border-surface-200 px-3 py-2"
                         >
-                          <span className="text-sm text-surface-800">
-                            {connection.otherUser.name ?? connection.otherUser.email}
+                          <span className="flex min-w-0 items-center gap-2 text-sm text-surface-800">
+                            {profileHref ? (
+                              <Link
+                                href={profileHref}
+                                className="flex h-8 w-8 shrink-0 items-center justify-center overflow-hidden rounded-full border border-surface-300 bg-surface-100 text-[10px] font-semibold text-surface-700"
+                              >
+                                {connection.otherUser.profileImageUrl ? (
+                                  <img
+                                    src={connection.otherUser.profileImageUrl}
+                                    alt={displayName}
+                                    className="h-full w-full object-cover"
+                                  />
+                                ) : (
+                                  getInitials(displayName)
+                                )}
+                              </Link>
+                            ) : (
+                              <span className="flex h-8 w-8 shrink-0 items-center justify-center overflow-hidden rounded-full border border-surface-300 bg-surface-100 text-[10px] font-semibold text-surface-700">
+                                {connection.otherUser.profileImageUrl ? (
+                                  <img
+                                    src={connection.otherUser.profileImageUrl}
+                                    alt={displayName}
+                                    className="h-full w-full object-cover"
+                                  />
+                                ) : (
+                                  getInitials(displayName)
+                                )}
+                              </span>
+                            )}
+
+                            {profileHref ? (
+                              <Link
+                                href={profileHref}
+                                className="truncate transition-colors duration-200 hover:text-trust-700"
+                              >
+                                {displayName}
+                              </Link>
+                            ) : (
+                              <span className="truncate">{displayName}</span>
+                            )}
                           </span>
                           <input
                             type="checkbox"
@@ -137,7 +191,7 @@ export default function VerificationPage() {
                               );
                             }}
                           />
-                        </label>
+                        </div>
                       );
                     })}
                   </div>
@@ -223,9 +277,49 @@ export default function VerificationPage() {
                       className="rounded-lg border border-surface-200 px-3 py-2"
                     >
                       <div className="flex items-center justify-between gap-2">
-                        <p className="text-sm text-surface-800">
-                          {item.verifier.name ?? item.verifier.id}
-                        </p>
+                        <div className="flex min-w-0 items-center gap-2">
+                          {item.verifier.publicProfileUrl ? (
+                            <Link
+                              href={`/in/${item.verifier.publicProfileUrl}`}
+                              className="flex h-7 w-7 shrink-0 items-center justify-center overflow-hidden rounded-full border border-surface-300 bg-surface-100 text-[10px] font-semibold text-surface-700"
+                            >
+                              {item.verifier.profileImageUrl ? (
+                                <img
+                                  src={item.verifier.profileImageUrl}
+                                  alt={item.verifier.name ?? item.verifier.id}
+                                  className="h-full w-full object-cover"
+                                />
+                              ) : (
+                                getInitials(item.verifier.name ?? item.verifier.id)
+                              )}
+                            </Link>
+                          ) : (
+                            <span className="flex h-7 w-7 shrink-0 items-center justify-center overflow-hidden rounded-full border border-surface-300 bg-surface-100 text-[10px] font-semibold text-surface-700">
+                              {item.verifier.profileImageUrl ? (
+                                <img
+                                  src={item.verifier.profileImageUrl}
+                                  alt={item.verifier.name ?? item.verifier.id}
+                                  className="h-full w-full object-cover"
+                                />
+                              ) : (
+                                getInitials(item.verifier.name ?? item.verifier.id)
+                              )}
+                            </span>
+                          )}
+
+                          {item.verifier.publicProfileUrl ? (
+                            <Link
+                              href={`/in/${item.verifier.publicProfileUrl}`}
+                              className="truncate text-sm text-surface-800 transition-colors duration-200 hover:text-trust-700"
+                            >
+                              {item.verifier.name ?? item.verifier.id}
+                            </Link>
+                          ) : (
+                            <p className="truncate text-sm text-surface-800">
+                              {item.verifier.name ?? item.verifier.id}
+                            </p>
+                          )}
+                        </div>
                         <Badge variant={statusBadgeVariant(item.status)}>
                           {item.status}
                         </Badge>

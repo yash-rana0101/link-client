@@ -1,5 +1,9 @@
 "use client";
 
+/* eslint-disable @next/next/no-img-element */
+
+import Link from "next/link";
+
 import { Button } from "@/components/ui/Button";
 import { Spinner } from "@/components/ui/Spinner";
 import { EmptyState, ErrorState } from "@/components/common/State";
@@ -7,6 +11,14 @@ import { ConversationList } from "@/features/messaging/ConversationList";
 import { MessageBox } from "@/features/messaging/MessageBox";
 import { useMessaging } from "@/features/messaging/useMessaging";
 import { useAppSelector } from "@/store/hooks";
+
+const getInitials = (value: string) =>
+  value
+    .split(/\s+/)
+    .filter(Boolean)
+    .slice(0, 2)
+    .map((part) => part[0]?.toUpperCase() ?? "")
+    .join("") || "ZT";
 
 export default function MessagingPage() {
   const { user } = useAppSelector((state) => state.auth);
@@ -72,14 +84,67 @@ export default function MessagingPage() {
 
       {activeConversation ? (
         <div className="space-y-3">
-          <div>
-            <h2 className="text-lg font-semibold text-surface-900">
-              {activeConversation.otherParticipant.name ??
-                activeConversation.otherParticipant.email}
-            </h2>
-            <p className="text-sm text-surface-600">
-              Trust score: {activeConversation.otherParticipant.trustScore}
-            </p>
+          <div className="flex items-center gap-3">
+            {activeConversation.otherParticipant.publicProfileUrl ? (
+              <Link
+                href={`/in/${activeConversation.otherParticipant.publicProfileUrl}`}
+                className="flex h-10 w-10 shrink-0 items-center justify-center overflow-hidden rounded-full border border-surface-300 bg-surface-100 text-xs font-semibold text-surface-700"
+              >
+                {activeConversation.otherParticipant.profileImageUrl ? (
+                  <img
+                    src={activeConversation.otherParticipant.profileImageUrl}
+                    alt={
+                      activeConversation.otherParticipant.name ??
+                      activeConversation.otherParticipant.email
+                    }
+                    className="h-full w-full object-cover"
+                  />
+                ) : (
+                  getInitials(
+                    activeConversation.otherParticipant.name ??
+                    activeConversation.otherParticipant.email,
+                  )
+                )}
+              </Link>
+            ) : (
+              <div className="flex h-10 w-10 shrink-0 items-center justify-center overflow-hidden rounded-full border border-surface-300 bg-surface-100 text-xs font-semibold text-surface-700">
+                {activeConversation.otherParticipant.profileImageUrl ? (
+                  <img
+                    src={activeConversation.otherParticipant.profileImageUrl}
+                    alt={
+                      activeConversation.otherParticipant.name ??
+                      activeConversation.otherParticipant.email
+                    }
+                    className="h-full w-full object-cover"
+                  />
+                ) : (
+                  getInitials(
+                    activeConversation.otherParticipant.name ??
+                    activeConversation.otherParticipant.email,
+                  )
+                )}
+              </div>
+            )}
+
+            <div>
+              {activeConversation.otherParticipant.publicProfileUrl ? (
+                <Link
+                  href={`/in/${activeConversation.otherParticipant.publicProfileUrl}`}
+                  className="text-lg font-semibold text-surface-900 transition-colors duration-200 hover:text-trust-700"
+                >
+                  {activeConversation.otherParticipant.name ??
+                    activeConversation.otherParticipant.email}
+                </Link>
+              ) : (
+                <h2 className="text-lg font-semibold text-surface-900">
+                  {activeConversation.otherParticipant.name ??
+                    activeConversation.otherParticipant.email}
+                </h2>
+              )}
+              <p className="text-sm text-surface-600">
+                Trust score: {activeConversation.otherParticipant.trustScore}
+              </p>
+            </div>
           </div>
 
           <MessageBox
