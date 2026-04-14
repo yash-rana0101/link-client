@@ -422,12 +422,6 @@ export const AuthForm = ({ mode }: AuthFormProps) => {
                   {oauthBusyProvider === "microsoft" ? "Redirecting..." : "Microsoft"}
                 </button>
               </div>
-
-              {!googleOAuthEnabled || !microsoftOAuthEnabled ? (
-                <p className="mt-2 text-xs text-surface-500">
-                  Social sign-in will be available once OAuth is set up.
-                </p>
-              ) : null}
             </div>
           </form>
 
@@ -441,14 +435,6 @@ export const AuthForm = ({ mode }: AuthFormProps) => {
                 {copy[mode].swapActionLabel}
               </Link>
             </p>
-
-            <div className="mt-4 flex items-center justify-center gap-2 lg:justify-start">
-              <span className="h-px w-9 bg-surface-300" />
-              <span className="text-[0.65rem] font-bold uppercase tracking-[0.2em] text-surface-500">
-                {copy[mode].securityLabel}
-              </span>
-              <span className="h-px w-9 bg-surface-300" />
-            </div>
 
             <p className="mt-3 text-xs font-medium text-surface-500">
               Help Center • Privacy • Contact
