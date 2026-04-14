@@ -316,7 +316,7 @@ export const AuthForm = ({ mode }: AuthFormProps) => {
                     fill="none"
                     stroke="currentColor"
                     strokeWidth="1.8"
-                    className="h-[18px] w-[18px]"
+                    className="h-4.5 w-4.5"
                     aria-hidden="true"
                   >
                     <path d="M8 11V8a4 4 0 1 1 8 0v3" />
