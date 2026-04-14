@@ -1,26 +1,88 @@
 @import "tailwindcss";
 
 :root {
-  --background: #ffffff;
-  --foreground: #171717;
+  --background: #f3f6f1;
+  --foreground: #17221b;
+  --surface-100: #f4f6f3;
+  --surface-200: #e7ece5;
+  --surface-300: #d6ddd4;
+  --surface-400: #9ca89f;
+  --surface-500: #6d7a70;
+  --surface-600: #4f5f53;
+  --surface-700: #344138;
+  --surface-800: #253129;
+  --surface-900: #17221b;
+  --trust-100: #d8f4de;
+  --trust-200: #a8e4b5;
+  --trust-300: #7bd694;
+  --trust-400: #54bf75;
+  --trust-500: #32a75a;
+  --trust-600: #1f8746;
+  --trust-700: #1a6d3a;
+  --trust-800: #165a31;
+  --trust-900: #124a29;
 }
 
 @theme inline {
   --color-background: var(--background);
   --color-foreground: var(--foreground);
-  --font-sans: var(--font-geist-sans);
-  --font-mono: var(--font-geist-mono);
-}
-
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
-  }
+  --color-surface-100: var(--surface-100);
+  --color-surface-200: var(--surface-200);
+  --color-surface-300: var(--surface-300);
+  --color-surface-400: var(--surface-400);
+  --color-surface-500: var(--surface-500);
+  --color-surface-600: var(--surface-600);
+  --color-surface-700: var(--surface-700);
+  --color-surface-800: var(--surface-800);
+  --color-surface-900: var(--surface-900);
+  --color-trust-100: var(--trust-100);
+  --color-trust-200: var(--trust-200);
+  --color-trust-300: var(--trust-300);
+  --color-trust-400: var(--trust-400);
+  --color-trust-500: var(--trust-500);
+  --color-trust-600: var(--trust-600);
+  --color-trust-700: var(--trust-700);
+  --color-trust-800: var(--trust-800);
+  --color-trust-900: var(--trust-900);
+  --font-sans: var(--font-body);
+  --font-serif: var(--font-heading);
 }
 
 body {
+  margin: 0;
   background: var(--background);
   color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
+  background-image:
+    radial-gradient(
+      circle at 15% 10%,
+      rgba(84, 191, 117, 0.2),
+      transparent 35%
+    ),
+    radial-gradient(circle at 88% 18%, rgba(23, 34, 27, 0.07), transparent 30%),
+    linear-gradient(180deg, #f8fbf7 0%, #eef3ed 100%);
+  font-family: var(--font-body), "Segoe UI", sans-serif;
+}
+
+h1,
+h2,
+h3,
+h4,
+h5,
+h6 {
+  font-family: var(--font-heading), "Times New Roman", serif;
+}
+
+.bg-app {
+  background-image:
+    radial-gradient(
+      circle at 20% 0%,
+      rgba(123, 214, 148, 0.3),
+      transparent 35%
+    ),
+    radial-gradient(
+      circle at 90% 15%,
+      rgba(255, 255, 255, 0.4),
+      transparent 28%
+    ),
+    linear-gradient(180deg, #f7faf6 0%, #edf2eb 100%);
 }
