@@ -3,7 +3,7 @@
 /* eslint-disable @next/next/no-img-element */
 
 import Link from "next/link";
-import { useRef, useState, type FormEvent } from "react";
+import { useEffect, useRef, useState, type FormEvent } from "react";
 import { Card } from "@/components/ui/Card";
 import { uploadToCloudinary } from "@/services/cloudinary.service";
 import { profileService } from "@/services/profile.service";
@@ -34,16 +34,36 @@ export const PostComposer = ({
   const fileInputRef = useRef<HTMLInputElement | null>(null);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [content, setContent] = useState("");
-  const [imageUrl, setImageUrl] = useState<string | null>(null);
+  const [selectedImageFile, setSelectedImageFile] = useState<File | null>(null);
+  const [previewImageUrl, setPreviewImageUrl] = useState<string | null>(null);
   const [selectedFileName, setSelectedFileName] = useState<string | null>(null);
   const [isUploading, setIsUploading] = useState(false);
   const [uploadError, setUploadError] = useState<string | null>(null);
   const displayName = authorName ?? "Trusted Professional";
 
+  useEffect(() => {
+    return () => {
+      if (previewImageUrl) {
+        URL.revokeObjectURL(previewImageUrl);
+      }
+    };
+  }, [previewImageUrl]);
+
+  const clearSelectedImage = () => {
+    setSelectedImageFile(null);
+    setSelectedFileName(null);
+    setPreviewImageUrl((current) => {
+      if (current) {
+        URL.revokeObjectURL(current);
+      }
+
+      return null;
+    });
+  };
+
   const resetComposer = () => {
     setContent("");
-    setImageUrl(null);
-    setSelectedFileName(null);
+    clearSelectedImage();
     setUploadError(null);
     setIsUploading(false);
   };
@@ -57,9 +77,17 @@ export const PostComposer = ({
     }
 
     try {
+      let uploadedImageUrl: string | null = null;
+
+      if (selectedImageFile) {
+        setIsUploading(true);
+        const signature = await profileService.createUploadSignature("POST_IMAGE");
+        uploadedImageUrl = await uploadToCloudinary(selectedImageFile, signature);
+      }
+
       await onCreatePost({
         content: trimmedContent,
-        imageUrl,
+        imageUrl: uploadedImageUrl,
       });
 
       resetComposer();
@@ -67,10 +95,12 @@ export const PostComposer = ({
     } catch (error) {
       const message = error instanceof Error ? error.message : "Failed to create post.";
       setUploadError(message);
+    } finally {
+      setIsUploading(false);
     }
   };
 
-  const handleUploadImage = async (file: File) => {
+  const handleAttachImage = (file: File) => {
     if (!file.type.startsWith("image/")) {
       setUploadError("Please choose an image file.");
       return;
@@ -82,23 +112,19 @@ export const PostComposer = ({
     }
 
     setUploadError(null);
-    setIsUploading(true);
 
-    try {
-      const signature = await profileService.createUploadSignature("POST_IMAGE");
-      const uploadedUrl = await uploadToCloudinary(file, signature);
-      setImageUrl(uploadedUrl);
-      setSelectedFileName(file.name);
-    } catch (error) {
-      const message = error instanceof Error ? error.message : "Failed to upload image.";
-      setUploadError(message);
-      setImageUrl(null);
-      setSelectedFileName(null);
-    } finally {
-      setIsUploading(false);
-      if (fileInputRef.current) {
-        fileInputRef.current.value = "";
+    setSelectedImageFile(file);
+    setSelectedFileName(file.name);
+    setPreviewImageUrl((current) => {
+      if (current) {
+        URL.revokeObjectURL(current);
       }
+
+      return URL.createObjectURL(file);
+    });
+
+    if (fileInputRef.current) {
+      fileInputRef.current.value = "";
     }
   };
 
@@ -242,22 +268,19 @@ export const PostComposer = ({
                   placeholder="What do you want to talk about?"
                 />
 
-                {imageUrl ? (
+                {previewImageUrl ? (
                   <div className="mt-4 rounded-xl border border-surface-200 bg-surface-50 p-3">
                     <div className="mb-2 flex items-center justify-between gap-2">
                       <p className="truncate text-sm text-surface-700">{selectedFileName ?? "Uploaded image"}</p>
                       <button
                         type="button"
-                        onClick={() => {
-                          setImageUrl(null);
-                          setSelectedFileName(null);
-                        }}
+                        onClick={clearSelectedImage}
                         className="rounded-full px-2 py-1 text-xs font-semibold text-surface-600 transition-colors duration-200 hover:bg-surface-200 hover:text-surface-900"
                       >
                         Remove
                       </button>
                     </div>
-                    <img src={imageUrl} alt="Post attachment" className="max-h-90 w-full rounded-lg object-cover" />
+                    <img src={previewImageUrl} alt="Post attachment preview" className="max-h-90 w-full rounded-lg object-cover" />
                   </div>
                 ) : null}
 
@@ -331,7 +354,7 @@ export const PostComposer = ({
                 const file = event.target.files?.[0];
 
                 if (file) {
-                  void handleUploadImage(file);
+                  handleAttachImage(file);
                 }
               }}
             />

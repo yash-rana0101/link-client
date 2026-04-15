@@ -76,6 +76,29 @@ export interface Certificate {
   createdAt: string;
 }
 
+export interface Education {
+  id: string;
+  experienceId: string;
+  institutionName: string;
+  degree: string;
+  description: string | null;
+  startDate: string;
+  endDate: string | null;
+  proofUrl: string;
+  createdAt: string;
+}
+
+export interface Project {
+  id: string;
+  experienceId: string;
+  organizationName: string;
+  title: string;
+  description: string | null;
+  type: ArtifactType;
+  url: string;
+  createdAt: string;
+}
+
 export type RelationshipType =
   | "COWORKER"
   | "TEAMMATE"
@@ -111,9 +134,24 @@ export interface LightweightPost {
   id: string;
   userId: string;
   content: string;
+  imageUrl: string | null;
   createdAt: string;
   likeCount: number;
   commentCount: number;
+}
+
+export interface ProfileAnalytics {
+  totalConnections: number;
+  totalExperiences: number;
+  verifiedExperiences: number;
+  totalArtifacts: number;
+  certificateCount: number;
+  totalPosts: number;
+  totalSkills: number;
+  totalProjects: number;
+  totalReactions: number;
+  totalComments: number;
+  totalProfileViews: number;
 }
 
 export interface CompleteProfile {
@@ -121,8 +159,12 @@ export interface CompleteProfile {
   stats: ProfileStats;
   experiences: Experience[];
   certificates: Certificate[];
+  education: Education[];
+  projects: Project[];
   connections: ConnectionSummary[];
   posts: LightweightPost[];
+  featuredPost: LightweightPost | null;
+  analytics: ProfileAnalytics;
 }
 
 export interface PublicProfile {
@@ -130,6 +172,11 @@ export interface PublicProfile {
   stats: ProfileStats;
   experiences: Experience[];
   certificates: Certificate[];
+  education: Education[];
+  projects: Project[];
+  posts: LightweightPost[];
+  featuredPost: LightweightPost | null;
+  analytics: ProfileAnalytics;
 }
 
 export interface ProfileViewer {

@@ -8,8 +8,10 @@ import { Card } from "@/components/ui/Card";
 import { EmptyState, ErrorState } from "@/components/common/State";
 import { Spinner } from "@/components/ui/Spinner";
 import { ExperienceCard } from "@/features/profile/ExperienceCard";
+import { ProfilePostSections } from "@/features/profile/ProfilePostSections";
 import { useGlobalSearch } from "@/features/search/useSearch";
 import { usePublicProfile } from "@/features/profile/useProfile";
+import { formatDateTime } from "@/lib/date";
 import type { GlobalSearchUserResult } from "@/types/search";
 
 interface PublicProfilePageProps {
@@ -148,6 +150,11 @@ export const PublicProfilePage = ({ publicProfileUrl }: PublicProfilePageProps) 
     stats,
     experiences,
     certificates,
+    education,
+    projects,
+    posts,
+    featuredPost,
+    analytics,
   } = profileQuery.data;
 
   const topExperience = experiences[0] ?? null;
@@ -265,7 +272,7 @@ export const PublicProfilePage = ({ publicProfileUrl }: PublicProfilePageProps) 
                 </div>
 
                 {organizationRows.length ? (
-                  <div className="mt-4 sm:mt-24 sm:min-w-[200px] max-w-sm space-y-4">
+                  <div className="mt-4 sm:mt-24 sm:min-w-50 max-w-sm space-y-4">
                     {organizationRows.map((item) => (
                       <div key={item.id} className="flex items-center gap-3">
                         <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded bg-surface-100 text-xs font-semibold text-surface-600 shadow-sm border border-surface-200 overflow-hidden">
@@ -307,6 +314,31 @@ export const PublicProfilePage = ({ publicProfileUrl }: PublicProfilePageProps) 
             </p>
           </Card>
 
+          <Card className="space-y-3">
+            <h3 className="text-xl font-semibold text-surface-900">Skills</h3>
+            {profile.skills.length ? (
+              <div className="flex flex-wrap gap-2">
+                {profile.skills.map((skill) => (
+                  <span key={skill.id} className="rounded-full bg-surface-100 px-3 py-1 text-sm text-surface-700">
+                    {skill.name}
+                  </span>
+                ))}
+              </div>
+            ) : (
+              <p className="text-sm text-surface-600">No skills added yet.</p>
+            )}
+          </Card>
+
+          <ProfilePostSections
+            authorName={profile.name ?? "Anonymous Professional"}
+            authorImageUrl={profile.profileImageUrl}
+            authorPublicProfileUrl={profile.publicProfileUrl}
+            authorTrustScore={profile.trustScore}
+            featuredPost={featuredPost}
+            posts={posts}
+            followersCount={analytics.totalConnections}
+          />
+
           <Card className="space-y-4">
             <div>
               <h2 className="text-2xl font-semibold text-surface-900">Experience</h2>
@@ -329,9 +361,32 @@ export const PublicProfilePage = ({ publicProfileUrl }: PublicProfilePageProps) 
             )}
           </Card>
 
-          {certificates.length ? (
-            <Card className="space-y-3">
-              <h3 className="text-xl font-semibold text-surface-900">Certificates</h3>
+          <Card className="space-y-3">
+            <h3 className="text-xl font-semibold text-surface-900">Education</h3>
+            {education.length ? (
+              <div className="space-y-2">
+                {education.map((item) => (
+                  <article key={item.id} className="rounded-xl border border-surface-200 bg-white p-3">
+                    <p className="text-sm font-semibold text-surface-900">{item.institutionName}</p>
+                    <p className="text-sm text-surface-700">{item.degree}</p>
+                    <p className="mt-1 text-xs text-surface-600">
+                      {formatDateTime(item.startDate)}
+                      {item.endDate ? ` - ${formatDateTime(item.endDate)}` : " - Present"}
+                    </p>
+                    <a href={item.proofUrl} target="_blank" rel="noreferrer" className="mt-2 inline-block text-xs font-medium text-trust-700 hover:text-trust-800">
+                      View proof
+                    </a>
+                  </article>
+                ))}
+              </div>
+            ) : (
+              <p className="text-sm text-surface-600">No education records yet.</p>
+            )}
+          </Card>
+
+          <Card className="space-y-3">
+            <h3 className="text-xl font-semibold text-surface-900">Certificates</h3>
+            {certificates.length ? (
               <div className="space-y-2">
                 {certificates.map((certificate) => (
                   <a
@@ -345,8 +400,38 @@ export const PublicProfilePage = ({ publicProfileUrl }: PublicProfilePageProps) 
                   </a>
                 ))}
               </div>
-            </Card>
-          ) : null}
+            ) : (
+              <p className="text-sm text-surface-600">No certificates added yet.</p>
+            )}
+          </Card>
+
+          <Card className="space-y-3">
+            <h3 className="text-xl font-semibold text-surface-900">Projects</h3>
+            {projects.length ? (
+              <div className="space-y-2">
+                {projects.map((project) => (
+                  <article key={project.id} className="rounded-xl border border-surface-200 bg-white p-3">
+                    <div className="flex items-center justify-between gap-2">
+                      <p className="text-sm font-semibold text-surface-900">{project.title}</p>
+                      <span className="rounded-full bg-surface-100 px-2 py-0.5 text-xs text-surface-700">
+                        {project.type}
+                      </span>
+                    </div>
+                    <p className="mt-1 text-sm text-surface-700">{project.organizationName}</p>
+                    {project.description ? (
+                      <p className="mt-1 text-xs text-surface-600">{project.description}</p>
+                    ) : null}
+                    <a href={project.url} target="_blank" rel="noreferrer" className="mt-2 inline-block text-xs font-medium text-trust-700 hover:text-trust-800">
+                      Open project
+                    </a>
+                  </article>
+                ))}
+              </div>
+            ) : (
+              <p className="text-sm text-surface-600">No projects available.</p>
+            )}
+          </Card>
+
         </div>
 
         <aside className="space-y-4">
@@ -414,24 +499,32 @@ export const PublicProfilePage = ({ publicProfileUrl }: PublicProfilePageProps) 
 
           <Card className="space-y-2">
             <p className="text-xs font-semibold uppercase tracking-wide text-surface-600">
-              Profile insights
+              Analytics
             </p>
             <div className="space-y-2 text-sm text-surface-700">
               <div className="flex items-center justify-between">
-                <span>Verified experiences</span>
-                <span className="font-semibold text-surface-900">{stats.verifiedExperiences}</span>
+                <span>Profile views</span>
+                <span className="font-semibold text-surface-900">{analytics.totalProfileViews}</span>
               </div>
               <div className="flex items-center justify-between">
-                <span>Total experiences</span>
-                <span className="font-semibold text-surface-900">{stats.totalExperiences}</span>
+                <span>Total posts</span>
+                <span className="font-semibold text-surface-900">{analytics.totalPosts}</span>
               </div>
               <div className="flex items-center justify-between">
-                <span>Evidence artifacts</span>
-                <span className="font-semibold text-surface-900">{stats.totalArtifacts}</span>
+                <span>Total reactions</span>
+                <span className="font-semibold text-surface-900">{analytics.totalReactions}</span>
               </div>
               <div className="flex items-center justify-between">
-                <span>Certificates</span>
-                <span className="font-semibold text-surface-900">{stats.certificateCount}</span>
+                <span>Total comments</span>
+                <span className="font-semibold text-surface-900">{analytics.totalComments}</span>
+              </div>
+              <div className="flex items-center justify-between">
+                <span>Total skills</span>
+                <span className="font-semibold text-surface-900">{analytics.totalSkills}</span>
+              </div>
+              <div className="flex items-center justify-between">
+                <span>Total projects</span>
+                <span className="font-semibold text-surface-900">{analytics.totalProjects}</span>
               </div>
             </div>
           </Card>

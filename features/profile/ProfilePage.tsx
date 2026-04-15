@@ -1,5 +1,7 @@
 "use client";
 
+/* eslint-disable @next/next/no-img-element */
+
 import Link from "next/link";
 import { Button } from "@/components/ui/Button";
 import { Card } from "@/components/ui/Card";
@@ -8,6 +10,7 @@ import { EmptyState, ErrorState } from "@/components/common/State";
 import { ExperienceCard } from "@/features/profile/ExperienceCard";
 import { ProfileEditorCard } from "@/features/profile/ProfileEditorCard";
 import { ProfileCard } from "@/features/profile/ProfileCard";
+import { ProfilePostSections } from "@/features/profile/ProfilePostSections";
 import { useProfile } from "@/features/profile/useProfile";
 import { formatDateTime } from "@/lib/date";
 
@@ -97,6 +100,17 @@ export default function ProfilePage() {
   }
 
   const guidePercent = guideQuery.data?.completion.percent;
+  const {
+    profile,
+    analytics,
+    experiences,
+    certificates,
+    education,
+    projects,
+    featuredPost,
+    posts,
+    connections,
+  } = profileQuery.data;
 
   return (
     <div className="space-y-6">
@@ -117,6 +131,32 @@ export default function ProfilePage() {
             {guideQuery.data?.feedback ? (
               <p className="mt-3 text-sm text-surface-700">{guideQuery.data.feedback}</p>
             ) : null}
+          </Card>
+
+          <Card>
+            <h3 className="text-sm font-semibold text-surface-900">Analytics</h3>
+            <div className="mt-3 space-y-2 text-sm text-surface-700">
+              <div className="flex items-center justify-between">
+                <span>Total profile views</span>
+                <span className="font-semibold">{analytics.totalProfileViews}</span>
+              </div>
+              <div className="flex items-center justify-between">
+                <span>Total reactions</span>
+                <span className="font-semibold">{analytics.totalReactions}</span>
+              </div>
+              <div className="flex items-center justify-between">
+                <span>Total comments</span>
+                <span className="font-semibold">{analytics.totalComments}</span>
+              </div>
+              <div className="flex items-center justify-between">
+                <span>Total skills</span>
+                <span className="font-semibold">{analytics.totalSkills}</span>
+              </div>
+              <div className="flex items-center justify-between">
+                <span>Total projects</span>
+                <span className="font-semibold">{analytics.totalProjects}</span>
+              </div>
+            </div>
           </Card>
 
           <Card>
@@ -189,6 +229,103 @@ export default function ProfilePage() {
         <div className="space-y-4">
           <ProfileEditorCard profile={profileQuery.data.profile} />
 
+          <Card className="space-y-3">
+            <h3 className="text-lg font-semibold text-surface-900">Skills</h3>
+            {profile.skills.length ? (
+              <div className="flex flex-wrap gap-2">
+                {profile.skills.map((skill) => (
+                  <span key={skill.id} className="rounded-full bg-surface-100 px-3 py-1 text-sm text-surface-700">
+                    {skill.name}
+                  </span>
+                ))}
+              </div>
+            ) : (
+              <p className="text-sm text-surface-600">No skills added yet.</p>
+            )}
+          </Card>
+
+          <ProfilePostSections
+            authorName={profile.name ?? "Anonymous Professional"}
+            authorImageUrl={profile.profileImageUrl}
+            authorPublicProfileUrl={profile.publicProfileUrl}
+            authorTrustScore={profile.trustScore}
+            featuredPost={featuredPost}
+            posts={posts}
+            followersCount={analytics.totalConnections}
+            isOwner
+          />
+
+          <Card className="space-y-3">
+            <h3 className="text-lg font-semibold text-surface-900">Education</h3>
+            {education.length ? (
+              <div className="space-y-2">
+                {education.map((item) => (
+                  <article key={item.id} className="rounded-xl border border-surface-200 bg-white p-3">
+                    <p className="text-sm font-semibold text-surface-900">{item.institutionName}</p>
+                    <p className="text-sm text-surface-700">{item.degree}</p>
+                    <p className="mt-1 text-xs text-surface-600">
+                      {formatDateTime(item.startDate)}
+                      {item.endDate ? ` - ${formatDateTime(item.endDate)}` : " - Present"}
+                    </p>
+                    <a href={item.proofUrl} target="_blank" rel="noreferrer" className="mt-2 inline-block text-xs font-medium text-trust-700 hover:text-trust-800">
+                      View proof
+                    </a>
+                  </article>
+                ))}
+              </div>
+            ) : (
+              <p className="text-sm text-surface-600">No education records yet.</p>
+            )}
+          </Card>
+
+          <Card className="space-y-3">
+            <h3 className="text-lg font-semibold text-surface-900">Certificates</h3>
+            {certificates.length ? (
+              <div className="space-y-2">
+                {certificates.map((certificate) => (
+                  <a
+                    key={certificate.id}
+                    href={certificate.url}
+                    target="_blank"
+                    rel="noreferrer"
+                    className="block rounded-xl border border-surface-200 px-3 py-2 text-sm text-surface-700 transition-colors duration-200 hover:bg-surface-100"
+                  >
+                    {certificate.role} at {certificate.companyName}
+                  </a>
+                ))}
+              </div>
+            ) : (
+              <p className="text-sm text-surface-600">No certificates added yet.</p>
+            )}
+          </Card>
+
+          <Card className="space-y-3">
+            <h3 className="text-lg font-semibold text-surface-900">Projects</h3>
+            {projects.length ? (
+              <div className="space-y-2">
+                {projects.map((project) => (
+                  <article key={project.id} className="rounded-xl border border-surface-200 bg-white p-3">
+                    <div className="flex items-center justify-between gap-2">
+                      <p className="text-sm font-semibold text-surface-900">{project.title}</p>
+                      <span className="rounded-full bg-surface-100 px-2 py-0.5 text-xs text-surface-700">
+                        {project.type}
+                      </span>
+                    </div>
+                    <p className="mt-1 text-sm text-surface-700">{project.organizationName}</p>
+                    {project.description ? (
+                      <p className="mt-1 text-xs text-surface-600">{project.description}</p>
+                    ) : null}
+                    <a href={project.url} target="_blank" rel="noreferrer" className="mt-2 inline-block text-xs font-medium text-trust-700 hover:text-trust-800">
+                      Open project
+                    </a>
+                  </article>
+                ))}
+              </div>
+            ) : (
+              <p className="text-sm text-surface-600">No projects added yet.</p>
+            )}
+          </Card>
+
           <div>
             <h2 className="text-xl font-semibold text-surface-900">Experience</h2>
             <p className="text-sm text-surface-600">
@@ -196,9 +333,9 @@ export default function ProfilePage() {
             </p>
           </div>
 
-          {profileQuery.data.experiences.length ? (
+          {experiences.length ? (
             <div className="space-y-3">
-              {profileQuery.data.experiences.map((experience) => (
+              {experiences.map((experience) => (
                 <ExperienceCard key={experience.id} experience={experience} />
               ))}
             </div>
@@ -212,7 +349,7 @@ export default function ProfilePage() {
           <Card>
             <h3 className="text-lg font-semibold text-surface-900">Connections</h3>
             <p className="mt-2 text-sm text-surface-600">
-              {profileQuery.data.connections.length} accepted relationships in your
+              {connections.length} accepted relationships in your
               trust graph.
             </p>
           </Card>

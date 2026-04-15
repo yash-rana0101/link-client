@@ -352,19 +352,19 @@ const PostCardComponent = ({
               </span>
             </div>
             <p className="text-xs text-surface-500">
-              Trust {post.user.trustScore} • {formatRelativeTime(post.createdAt)}
+              {formatRelativeTime(post.createdAt)}
             </p>
           </div>
         </div>
 
-        <span
+        {/* <span
           className={[
             "rounded-full border px-2.5 py-1 text-[10px] font-semibold uppercase tracking-wide",
             style.tagClassName,
           ].join(" ")}
         >
           {style.label}
-        </span>
+        </span> */}
       </div>
 
       <p className="whitespace-pre-wrap text-sm leading-relaxed text-surface-800">
@@ -377,14 +377,14 @@ const PostCardComponent = ({
         </div>
       ) : null}
 
-      <p
+      {/* <p
         className={[
           "rounded-xl border px-3 py-2 text-xs font-medium",
           style.highlightClassName,
         ].join(" ")}
       >
         {buildHighlightText(post, signal)}
-      </p>
+      </p> */}
 
       <div className="flex flex-wrap items-center gap-1 border-y border-surface-300/90 py-1">
         <ActionIconButton
