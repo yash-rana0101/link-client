@@ -44,12 +44,12 @@ export const RouteFooter = () => {
     <footer className="border-t border-surface-300 bg-[#eef3ed]">
       <div className="mx-auto grid w-full max-w-7xl gap-6 px-4 py-8 sm:px-6 md:grid-cols-[1.3fr_1fr_1fr_1fr]">
         <div>
-          <p className="text-lg font-semibold text-trust-700">ZeroTrust Network</p>
+          <p className="text-lg font-semibold text-trust-700">Accord</p>
           <p className="mt-2 max-w-xs text-sm text-surface-600">
             Trust-first professional networking with verifiable experience, secure messaging, and reputation-backed connections.
           </p>
           <p className="mt-3 text-xs text-surface-500">
-            {new Date().getFullYear()} ZeroTrust Network. All rights reserved.
+            {new Date().getFullYear()} Accord. All rights reserved.
           </p>
         </div>
 

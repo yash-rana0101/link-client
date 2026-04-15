@@ -11,7 +11,7 @@ const inter = Inter({
 });
 
 export const metadata: Metadata = {
-  title: "ZeroTrust Network",
+  title: "Accord",
   description: "Trust-first professional networking client",
 };
 

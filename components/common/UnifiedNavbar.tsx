@@ -8,6 +8,8 @@ import { useGlobalSearch } from "@/features/search/useSearch";
 import { cn } from "@/lib/cn";
 import type { AuthUser } from "@/types/auth";
 import { Spinner } from "@/components/ui/Spinner";
+import Image from "next/image";
+import logo from "../../public/accord.png"
 
 type NavIconName =
   | "feed"
@@ -172,8 +174,10 @@ export const UnifiedNavbar = ({
   return (
     <header className="sticky top-0 z-40 border-b border-surface-300 bg-[#f4f6f3]/95 backdrop-blur-md">
       <div className="mx-auto flex w-full max-w-7xl items-center gap-3 px-3 py-2.5 sm:px-6">
+        {/* navbar logo */}
+        <Image src={logo} alt="accord-logo" className="h-14 w-14 justify-baseline"/>
         <Link href="/feed" className="shrink-0 text-base font-bold text-trust-700 sm:text-lg">
-          ZeroTrust Network
+          Accord
         </Link>
 
         <div ref={searchContainerRef} className="relative hidden min-w-55 flex-1 md:block">

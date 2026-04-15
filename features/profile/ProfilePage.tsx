@@ -251,7 +251,7 @@ export default function ProfilePage() {
             authorTrustScore={profile.trustScore}
             featuredPost={featuredPost}
             posts={posts}
-            followersCount={analytics.totalConnections}
+            followersCount={analytics.totalFollowers}
             isOwner
           />
 

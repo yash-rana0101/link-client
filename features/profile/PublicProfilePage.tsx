@@ -3,16 +3,26 @@
 /* eslint-disable @next/next/no-img-element */
 
 import Link from "next/link";
+import { useRouter } from "next/navigation";
+import { useEffect, useRef, useState } from "react";
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { Button } from "@/components/ui/Button";
 import { Card } from "@/components/ui/Card";
 import { EmptyState, ErrorState } from "@/components/common/State";
 import { Spinner } from "@/components/ui/Spinner";
+import { CONNECTIONS_PENDING_QUERY_KEY, CONNECTIONS_QUERY_KEY } from "@/features/connections/useConnections";
+import { FEED_QUERY_KEY } from "@/features/feed/useFeed";
 import { ExperienceCard } from "@/features/profile/ExperienceCard";
 import { ProfilePostSections } from "@/features/profile/ProfilePostSections";
+import { PUBLIC_PROFILE_QUERY_KEY, usePublicProfile } from "@/features/profile/useProfile";
 import { useGlobalSearch } from "@/features/search/useSearch";
-import { usePublicProfile } from "@/features/profile/useProfile";
 import { formatDateTime } from "@/lib/date";
+import { connectionService } from "@/services/connection.service";
+import { followService } from "@/services/follow.service";
+import { reportService } from "@/services/report.service";
+import { useAppSelector } from "@/store/hooks";
 import type { GlobalSearchUserResult } from "@/types/search";
+import type { ProfileReportReason } from "@/types/report";
 
 interface PublicProfilePageProps {
   publicProfileUrl: string;
@@ -46,6 +56,39 @@ const toSearchHref = (query: string) => {
   }
 
   return `/search?q=${encodeURIComponent(normalized)}`;
+};
+
+const getClientErrorMessage = (error: unknown): string => {
+  if (typeof error === "object" && error && "message" in error) {
+    const message = (error as { message?: unknown }).message;
+
+    if (typeof message === "string" && message.trim()) {
+      return message;
+    }
+  }
+
+  return "Request failed.";
+};
+
+const parseProfileReportReason = (value: string): ProfileReportReason | null => {
+  const normalized = value.trim().toUpperCase();
+
+  if (!normalized) {
+    return null;
+  }
+
+  const aliasMap: Record<string, ProfileReportReason> = {
+    SPAM: "SPAM",
+    IMPERSONATION: "IMPERSONATION",
+    HARASSMENT: "HARASSMENT",
+    MISINFORMATION: "MISINFORMATION",
+    INAPPROPRIATE: "INAPPROPRIATE",
+    OTHER: "OTHER",
+    ABUSE: "HARASSMENT",
+    FAKE: "IMPERSONATION",
+  };
+
+  return aliasMap[normalized] ?? null;
 };
 
 const SuggestedAccountRow = ({
@@ -103,7 +146,104 @@ const SuggestedAccountRow = ({
 };
 
 export const PublicProfilePage = ({ publicProfileUrl }: PublicProfilePageProps) => {
+  const router = useRouter();
+  const queryClient = useQueryClient();
+  const { user } = useAppSelector((state) => state.auth);
+  const actionMenuRef = useRef<HTMLDivElement | null>(null);
+  const [isActionMenuOpen, setIsActionMenuOpen] = useState(false);
+  const [actionNotice, setActionNotice] = useState<string | null>(null);
+  const [reportError, setReportError] = useState<string | null>(null);
   const profileQuery = usePublicProfile(publicProfileUrl);
+  const normalizedPublicProfileUrl = publicProfileUrl.trim();
+  const targetProfileId = profileQuery.data?.profile.id ?? "";
+  const isOwner = Boolean(user?.id && targetProfileId && user.id === targetProfileId);
+
+  const followStatusQuery = useQuery({
+    queryKey: ["follow", "status", targetProfileId],
+    queryFn: () => followService.getFollowStatus(targetProfileId),
+    enabled: Boolean(user?.id && targetProfileId && !isOwner),
+    staleTime: 15_000,
+    retry: 1,
+  });
+
+  const connectionStatusQuery = useQuery({
+    queryKey: ["connections", "status", targetProfileId],
+    queryFn: () => connectionService.getConnectionStatus(targetProfileId),
+    enabled: Boolean(user?.id && targetProfileId && !isOwner),
+    staleTime: 15_000,
+    retry: 1,
+  });
+
+  const followMutation = useMutation({
+    mutationFn: async ({ userId, isFollowing }: { userId: string; isFollowing: boolean }) => {
+      if (isFollowing) {
+        await followService.unfollowUser(userId);
+        return;
+      }
+
+      await followService.followUser(userId);
+    },
+    onSuccess: async () => {
+      setReportError(null);
+
+      await Promise.all([
+        queryClient.invalidateQueries({ queryKey: ["follow", "status", targetProfileId] }),
+        queryClient.invalidateQueries({ queryKey: [PUBLIC_PROFILE_QUERY_KEY, normalizedPublicProfileUrl] }),
+        queryClient.invalidateQueries({ queryKey: FEED_QUERY_KEY }),
+      ]);
+    },
+    onError: (error) => {
+      setReportError(getClientErrorMessage(error));
+      setActionNotice(null);
+    },
+  });
+
+  const connectMutation = useMutation({
+    mutationFn: (receiverId: string) => connectionService.requestConnection({
+      receiverId,
+      relationship: "COLD_OUTREACH",
+    }),
+    onSuccess: async () => {
+      await Promise.all([
+        queryClient.invalidateQueries({ queryKey: ["connections", "status", targetProfileId] }),
+        queryClient.invalidateQueries({ queryKey: CONNECTIONS_QUERY_KEY }),
+        queryClient.invalidateQueries({ queryKey: CONNECTIONS_PENDING_QUERY_KEY }),
+      ]);
+    },
+  });
+
+  const reportMutation = useMutation({
+    mutationFn: reportService.createProfileReport,
+    onSuccess: () => {
+      setReportError(null);
+      setActionNotice("Profile reported. Our team will review it.");
+      setIsActionMenuOpen(false);
+    },
+    onError: (error) => {
+      setReportError(getClientErrorMessage(error));
+      setActionNotice(null);
+    },
+  });
+
+  useEffect(() => {
+    const handleOutsideClick = (event: MouseEvent) => {
+      if (!actionMenuRef.current) {
+        return;
+      }
+
+      if (actionMenuRef.current.contains(event.target as Node)) {
+        return;
+      }
+
+      setIsActionMenuOpen(false);
+    };
+
+    document.addEventListener("mousedown", handleOutsideClick);
+
+    return () => {
+      document.removeEventListener("mousedown", handleOutsideClick);
+    };
+  }, []);
 
   const suggestionSeed =
     profileQuery.data?.profile.location?.trim()
@@ -120,6 +260,111 @@ export const PublicProfilePage = ({ publicProfileUrl }: PublicProfilePageProps) 
 
   const suggestedAccountsQuery = useGlobalSearch(suggestionSeed, 8, Boolean(suggestionSeed));
   const interestedProfilesQuery = useGlobalSearch(interestSeed, 8, Boolean(interestSeed));
+
+  const handleToggleFollow = () => {
+    if (!targetProfileId) {
+      return;
+    }
+
+    if (!user?.id) {
+      router.push("/login");
+      return;
+    }
+
+    followMutation.mutate({
+      userId: targetProfileId,
+      isFollowing: followStatusQuery.data?.isFollowing ?? false,
+    });
+
+    setReportError(null);
+  };
+
+  const handleConnect = () => {
+    if (!targetProfileId) {
+      return;
+    }
+
+    if (!user?.id) {
+      router.push("/login");
+      return;
+    }
+
+    const connectionStatus = connectionStatusQuery.data;
+
+    if (connectionStatus?.hasPendingRequestToCurrentUser) {
+      router.push("/connections");
+      setIsActionMenuOpen(false);
+      return;
+    }
+
+    if (connectionStatus?.isConnected || connectionStatus?.hasPendingRequestFromCurrentUser) {
+      setIsActionMenuOpen(false);
+      return;
+    }
+
+    connectMutation.mutate(targetProfileId);
+    setIsActionMenuOpen(false);
+    setReportError(null);
+  };
+
+  const handleShareProfile = async () => {
+    if (typeof window === "undefined") {
+      return;
+    }
+
+    const pathname = normalizedPublicProfileUrl ? `/in/${normalizedPublicProfileUrl}` : window.location.pathname;
+    const shareUrl = `${window.location.origin}${pathname}`;
+
+    try {
+      await navigator.clipboard.writeText(shareUrl);
+      setActionNotice("Profile link copied.");
+      setReportError(null);
+      setIsActionMenuOpen(false);
+    } catch {
+      setActionNotice("Unable to copy profile link.");
+      setIsActionMenuOpen(false);
+    }
+  };
+
+  const handleReportProfile = async () => {
+    if (!targetProfileId) {
+      return;
+    }
+
+    if (!user?.id) {
+      router.push("/login");
+      return;
+    }
+
+    if (typeof window === "undefined") {
+      return;
+    }
+
+    const reasonInput = window.prompt(
+      "Report reason (SPAM, IMPERSONATION, HARASSMENT, MISINFORMATION, INAPPROPRIATE, OTHER)",
+      "OTHER",
+    );
+
+    if (reasonInput === null) {
+      return;
+    }
+
+    const reason = parseProfileReportReason(reasonInput);
+
+    if (!reason) {
+      setReportError("Invalid report reason.");
+      setActionNotice(null);
+      return;
+    }
+
+    const detailsInput = window.prompt("Optional details for report", "");
+
+    reportMutation.mutate({
+      reportedUserId: targetProfileId,
+      reason,
+      details: detailsInput?.trim() ? detailsInput.trim() : undefined,
+    });
+  };
 
   if (profileQuery.isLoading) {
     return (
@@ -187,6 +432,24 @@ export const PublicProfilePage = ({ publicProfileUrl }: PublicProfilePageProps) 
     .filter((account) => account.id !== profile.id)
     .slice(0, 5);
 
+  const connectionStatus = connectionStatusQuery.data;
+  const canMessage = isOwner || connectionStatus?.canMessage === true;
+  const connectLabel = connectionStatus?.isConnected
+    ? "Connected"
+    : connectionStatus?.hasPendingRequestFromCurrentUser
+      ? "Pending"
+      : connectionStatus?.hasPendingRequestToCurrentUser
+        ? "Review"
+        : "Connect";
+  const connectDisabled = (
+    connectMutation.isPending
+    || connectionStatusQuery.isFetching
+    || connectionStatus?.isConnected
+    || connectionStatus?.hasPendingRequestFromCurrentUser
+  );
+  const followLabel = followStatusQuery.data?.isFollowing ? "Unfollow" : "Follow";
+  const activityFollowersCount = followStatusQuery.data?.followerCount ?? analytics.totalFollowers;
+
   return (
     <div className="w-full">
       <div className="grid gap-4 lg:grid-cols-[minmax(0,1fr)_320px]">
@@ -250,24 +513,115 @@ export const PublicProfilePage = ({ publicProfileUrl }: PublicProfilePageProps) 
                     </p>
 
                     <div className="mt-4 flex flex-wrap gap-2">
-                      <Link
-                        href="/messaging"
-                        className="inline-flex h-9 items-center justify-center rounded-full bg-trust-600 px-4 text-sm font-semibold text-white transition-colors duration-200 hover:bg-trust-700 gap-1.5"
-                      >
-                        <svg className="h-4 w-4" fill="currentColor" viewBox="0 0 24 24"><path d="M21 3L2 10.5l7 3.5 1.5 8L15 15l6-3V3zm-3.5 13.5l-4.5 2V14.5l-2-1-4.5-2L18 5l-4.5 11.5z" /></svg>
-                        Message
-                      </Link>
-                      <Link
-                        href="/connections"
-                        className="inline-flex h-9 items-center justify-center rounded-full border border-surface-400 bg-white px-4 text-sm font-semibold text-surface-700 transition-colors duration-200 hover:bg-surface-50 gap-1"
-                      >
-                        <svg className="h-5 w-5" fill="currentColor" viewBox="0 0 24 24"><path d="M12 5v14M5 12h14" stroke="currentColor" strokeWidth="2" strokeLinecap="round" /></svg>
-                        Follow
-                      </Link>
-                      <button className="flex h-9 w-9 items-center justify-center rounded-full border border-surface-400 bg-white text-surface-700 transition-colors duration-200 hover:bg-surface-50">
-                        <svg className="h-5 w-5" fill="currentColor" viewBox="0 0 24 24"><path d="M5 12a2 2 0 110-4 2 2 0 010 4zm7 0a2 2 0 110-4 2 2 0 010 4zm7 0a2 2 0 110-4 2 2 0 010 4z" /></svg>
-                      </button>
+                      {canMessage ? (
+                        <Link
+                          href="/messaging"
+                          className="inline-flex h-9 items-center justify-center rounded-full bg-trust-600 px-4 text-sm font-semibold text-white transition-colors duration-200 hover:bg-trust-700 gap-1.5"
+                        >
+                          <svg className="h-4 w-4" fill="currentColor" viewBox="0 0 24 24"><path d="M21 3L2 10.5l7 3.5 1.5 8L15 15l6-3V3zm-3.5 13.5l-4.5 2V14.5l-2-1-4.5-2L18 5l-4.5 11.5z" /></svg>
+                          Message
+                        </Link>
+                      ) : (
+                        <button
+                          type="button"
+                          onClick={() => {
+                            if (!user?.id) {
+                              router.push("/login");
+                              return;
+                            }
+
+                            router.push("/connections");
+                          }}
+                          className="inline-flex h-9 items-center justify-center rounded-full border border-surface-400 bg-white px-4 text-sm font-semibold text-surface-700 transition-colors duration-200 hover:bg-surface-50 gap-1.5"
+                        >
+                          <svg className="h-4 w-4" fill="currentColor" viewBox="0 0 24 24"><path d="M21 3L2 10.5l7 3.5 1.5 8L15 15l6-3V3zm-3.5 13.5l-4.5 2V14.5l-2-1-4.5-2L18 5l-4.5 11.5z" /></svg>
+                          Message
+                        </button>
+                      )}
+
+                      {!isOwner ? (
+                        <button
+                          type="button"
+                          onClick={handleToggleFollow}
+                          disabled={followMutation.isPending || followStatusQuery.isFetching}
+                          className={[
+                            "inline-flex h-9 items-center justify-center rounded-full border px-4 text-sm font-semibold transition-colors duration-200",
+                            followStatusQuery.data?.isFollowing
+                              ? "border-trust-500 bg-trust-50 text-trust-700 hover:bg-trust-100"
+                              : "border-surface-400 bg-white text-surface-700 hover:bg-surface-50",
+                            followMutation.isPending || followStatusQuery.isFetching ? "cursor-not-allowed opacity-60" : "",
+                          ].join(" ")}
+                        >
+                          {followMutation.isPending ? "Saving..." : followLabel}
+                        </button>
+                      ) : null}
+
+                      <div className="relative" ref={actionMenuRef}>
+                        <button
+                          type="button"
+                          onClick={() => setIsActionMenuOpen((current) => !current)}
+                          className="flex h-9 w-9 items-center justify-center rounded-full border border-surface-400 bg-white text-surface-700 transition-colors duration-200 hover:bg-surface-50"
+                          aria-label="Open profile actions"
+                        >
+                          <svg className="h-5 w-5" fill="currentColor" viewBox="0 0 24 24"><path d="M5 12a2 2 0 110-4 2 2 0 010 4zm7 0a2 2 0 110-4 2 2 0 010 4zm7 0a2 2 0 110-4 2 2 0 010 4z" /></svg>
+                        </button>
+
+                        {isActionMenuOpen ? (
+                          <div className="absolute right-0 z-20 mt-2 w-56 overflow-hidden rounded-xl border border-surface-200 bg-white shadow-lg">
+                            {!isOwner ? (
+                              <button
+                                type="button"
+                                onClick={handleConnect}
+                                disabled={connectDisabled}
+                                className={[
+                                  "flex w-full items-center justify-between px-3 py-2 text-left text-sm transition-colors",
+                                  connectDisabled
+                                    ? "cursor-not-allowed text-surface-400"
+                                    : "text-surface-700 hover:bg-surface-100",
+                                ].join(" ")}
+                              >
+                                <span>{connectMutation.isPending ? "Sending..." : connectLabel}</span>
+                                <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2"><path strokeLinecap="round" strokeLinejoin="round" d="M12 5v14M5 12h14" /></svg>
+                              </button>
+                            ) : null}
+
+                            <button
+                              type="button"
+                              onClick={() => void handleShareProfile()}
+                              className="flex w-full items-center justify-between px-3 py-2 text-left text-sm text-surface-700 transition-colors hover:bg-surface-100"
+                            >
+                              <span>Share profile</span>
+                              <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2"><path strokeLinecap="round" strokeLinejoin="round" d="M4 12v7a1 1 0 001 1h14a1 1 0 001-1v-7" /><path strokeLinecap="round" strokeLinejoin="round" d="M16 6l-4-4-4 4" /><path strokeLinecap="round" strokeLinejoin="round" d="M12 2v13" /></svg>
+                            </button>
+
+                            {!isOwner ? (
+                              <button
+                                type="button"
+                                onClick={() => void handleReportProfile()}
+                                disabled={reportMutation.isPending}
+                                className={[
+                                  "flex w-full items-center justify-between px-3 py-2 text-left text-sm transition-colors",
+                                  reportMutation.isPending
+                                    ? "cursor-not-allowed text-red-300"
+                                    : "text-red-600 hover:bg-red-50",
+                                ].join(" ")}
+                              >
+                                <span>{reportMutation.isPending ? "Reporting..." : "Report profile"}</span>
+                                <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2"><path strokeLinecap="round" strokeLinejoin="round" d="M4 4h16v11H5l-1 1V4Z" /><path strokeLinecap="round" strokeLinejoin="round" d="M8 8h8M8 11h5" /></svg>
+                              </button>
+                            ) : null}
+                          </div>
+                        ) : null}
+                      </div>
                     </div>
+
+                    {actionNotice ? (
+                      <p className="mt-2 text-xs font-medium text-trust-700">{actionNotice}</p>
+                    ) : null}
+
+                    {reportError ? (
+                      <p className="mt-2 text-xs font-medium text-red-600">{reportError}</p>
+                    ) : null}
                   </div>
                 </div>
 
@@ -336,7 +690,11 @@ export const PublicProfilePage = ({ publicProfileUrl }: PublicProfilePageProps) 
             authorTrustScore={profile.trustScore}
             featuredPost={featuredPost}
             posts={posts}
-            followersCount={analytics.totalConnections}
+            followersCount={activityFollowersCount}
+            isOwner={isOwner}
+            isFollowing={followStatusQuery.data?.isFollowing}
+            isFollowPending={followMutation.isPending || followStatusQuery.isFetching}
+            onToggleFollow={isOwner ? undefined : handleToggleFollow}
           />
 
           <Card className="space-y-4">

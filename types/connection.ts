@@ -31,3 +31,12 @@ export interface RespondConnectionPayload {
   connectionId: string;
   status: Extract<ConnectionStatus, "ACCEPTED" | "REJECTED">;
 }
+
+export interface ConnectionRelationStatus {
+  targetUserId: string;
+  isConnected: boolean;
+  canMessage: boolean;
+  hasPendingRequestFromCurrentUser: boolean;
+  hasPendingRequestToCurrentUser: boolean;
+  connectionId: string | null;
+}

@@ -21,6 +21,9 @@ interface ProfilePostSectionsProps {
   posts: LightweightPost[];
   followersCount: number;
   isOwner?: boolean;
+  isFollowing?: boolean;
+  isFollowPending?: boolean;
+  onToggleFollow?: () => void;
 }
 
 interface ActivityPostCardProps {
@@ -293,6 +296,9 @@ export const ProfilePostSections = ({
   posts,
   followersCount,
   isOwner,
+  isFollowing,
+  isFollowPending,
+  onToggleFollow,
 }: ProfilePostSectionsProps) => {
   const queryClient = useQueryClient();
   const [activeSlide, setActiveSlide] = useState(0);
@@ -406,9 +412,17 @@ export const ProfilePostSections = ({
         {!isOwner ? (
           <button
             type="button"
-            className="inline-flex h-9 items-center justify-center rounded-full border border-surface-400 px-4 text-sm font-semibold text-surface-700 transition-colors duration-200 hover:bg-surface-100"
+            onClick={onToggleFollow}
+            disabled={isFollowPending || !onToggleFollow}
+            className={[
+              "inline-flex h-9 items-center justify-center rounded-full border px-4 text-sm font-semibold transition-colors duration-200",
+              isFollowing
+                ? "border-trust-500 bg-trust-50 text-trust-700 hover:bg-trust-100"
+                : "border-surface-400 text-surface-700 hover:bg-surface-100",
+              isFollowPending || !onToggleFollow ? "cursor-not-allowed opacity-60" : "",
+            ].join(" ")}
           >
-            + Follow
+            {isFollowPending ? "Saving..." : isFollowing ? "Unfollow" : "+ Follow"}
           </button>
         ) : null}
       </div>

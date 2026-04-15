@@ -142,6 +142,8 @@ export interface LightweightPost {
 
 export interface ProfileAnalytics {
   totalConnections: number;
+  totalFollowers: number;
+  totalFollowing: number;
   totalExperiences: number;
   verifiedExperiences: number;
   totalArtifacts: number;
